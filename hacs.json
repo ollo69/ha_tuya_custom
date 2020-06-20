@@ -1,0 +1,6 @@
+{
+  "name": "Tuya Custom",
+  "content_in_root": false,
+  "domains": ["sensor"],
+  "iot_class": "cloud_poll"
+}

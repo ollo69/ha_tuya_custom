@@ -2,7 +2,7 @@
 from homeassistant.components.switch import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,7 +47,7 @@ def _setup_entities(hass, dev_ids, platform):
     return entities
 
 
-class TuyaSwitch(TuyaDevice, SwitchDevice):
+class TuyaSwitch(TuyaDevice, SwitchEntity):
     """Tuya Switch Device."""
 
     def __init__(self, tuya, platform):

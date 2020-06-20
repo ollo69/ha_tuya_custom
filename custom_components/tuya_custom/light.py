@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -54,7 +54,7 @@ def _setup_entities(hass, dev_ids, platform):
     return entities
 
 
-class TuyaLight(TuyaDevice, Light):
+class TuyaLight(TuyaDevice, LightEntity):
     """Tuya light device."""
 
     def __init__(self, tuya, platform):

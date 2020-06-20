@@ -3,8 +3,10 @@ import logging
 import time
 
 import requests
+from datetime import datetime
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import HTTPError as RequestsHTTPError
+from threading import Lock
 
 from .devices.factory import get_tuya_device
 
@@ -14,6 +16,7 @@ DEFAULTREGION = "us"
 REFRESHTIME = 60 * 60 * 12
 
 _LOGGER = logging.getLogger(__name__)
+lock = Lock()
 
 
 class TuyaSession:
@@ -33,6 +36,11 @@ SESSION = TuyaSession()
 
 
 class TuyaApi:
+
+    def __init__(self):
+        self._discovered_devices = None
+        self._last_discover = None
+
     def init(self, username, password, countryCode, bizType=""):
         SESSION.username = username
         SESSION.password = password
@@ -111,11 +119,32 @@ class TuyaApi:
         self.check_access_token()
         return self.discover_devices()
 
+    def update_device_status(self, dev_id, new_state):
+        for device in self._discovered_devices:
+            if device["id"] == dev_id:
+                device["data"]["state"] = new_state
+
+    def call_discovery(self):
+        if not self._last_discover:
+            self._last_discover = datetime.now()
+            return True
+        difference = (datetime.now() - self._last_discover).total_seconds()
+        if difference > 15:
+            self._last_discover = datetime.now()
+            return True
+        return False
+
     def discovery(self):
-        response = self._request("Discovery", "discovery")
-        if response and response["header"]["code"] == "SUCCESS":
-            return response["payload"]["devices"]
-        return None
+        with lock:
+            if self.call_discovery():
+                response = self._request("Discovery", "discovery")
+                if response and response["header"]["code"] == "SUCCESS":
+                    self._discovered_devices = response["payload"]["devices"]
+                # else:
+                #     self._discovered_devices = None
+            else:
+                _LOGGER.debug("Discovery: Use cached info")
+        return self._discovered_devices
 
     def discover_devices(self):
         devices = self.discovery()
