@@ -1,0 +1,8 @@
+{
+  "domain": "tuya_custom",
+  "name": "Tuya Custom",
+  "documentation": "https://www.home-assistant.io/integrations/tuya",
+  "requirements": [],
+  "codeowners": ["@ollo69"],
+  "config_flow": true
+}
