@@ -119,10 +119,10 @@ class TuyaApi:
         self.check_access_token()
         return self.discover_devices()
 
-    def update_device_status(self, dev_id, new_state):
+    def update_device_data(self, dev_id, data):
         for device in self._discovered_devices:
             if device["id"] == dev_id:
-                device["data"]["state"] = new_state
+                device["data"] = data
 
     def call_discovery(self):
         if not self._last_discover:

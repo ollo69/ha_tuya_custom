@@ -12,11 +12,15 @@ class TuyaSwitch(TuyaDevice):
 
     def turn_on(self):
         self.api.device_control(self.obj_id, "turnOnOff", {"value": "1"})
-        self.api.update_device_status(self.obj_id, True)
+        if self.data:
+            self.data["state"] = True
+            self.api.update_device_data(self.obj_id, self.data)
 
     def turn_off(self):
         self.api.device_control(self.obj_id, "turnOnOff", {"value": "0"})
-        self.api.update_device_status(self.obj_id, False)
+        if self.data:
+            self.data["state"] = False
+            self.api.update_device_data(self.obj_id, self.data)
 
     # workaround for https://github.com/PaulAnnekov/tuyaha/issues/3
     def update(self):
