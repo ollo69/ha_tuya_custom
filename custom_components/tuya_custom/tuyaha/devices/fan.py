@@ -2,13 +2,6 @@ from .base import TuyaDevice
 
 
 class TuyaFanDevice(TuyaDevice):
-    def state(self):
-        state = self.data.get("state")
-        if state == "true":
-            return True
-        else:
-            return False
-
     def speed(self):
         return self.data.get("speed")
 

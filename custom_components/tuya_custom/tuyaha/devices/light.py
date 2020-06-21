@@ -2,13 +2,6 @@ from .base import TuyaDevice
 
 
 class TuyaLight(TuyaDevice):
-    def state(self):
-        state = self.data.get("state")
-        if state == "true":
-            return True
-        else:
-            return False
-
     def brightness(self):
         work_mode = self.data.get("color_mode")
         if work_mode == "colour" and "color" in self.data:

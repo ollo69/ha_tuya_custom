@@ -1,6 +1,8 @@
 import time
 import logging
 
+from distutils.util import strtobool
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -19,10 +21,12 @@ class TuyaDevice:
 
     def state(self):
         state = self.data.get("state")
-        if state == "true":
-            return True
+        if state is None:
+            return None
+        elif isinstance(state, str):
+            return strtobool(state)
         else:
-            return False
+            return bool(state)
 
     def device_type(self):
         return self.dev_type

@@ -7,6 +7,7 @@ from datetime import datetime
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import HTTPError as RequestsHTTPError
 from threading import Lock
+from distutils.util import strtobool
 
 from .devices.factory import get_tuya_device
 
@@ -135,12 +136,14 @@ class TuyaApi:
             if self.call_discovery():
                 response = self._request("Discovery", "discovery")
                 if response and response["header"]["code"] == "SUCCESS":
-                    self._discovered_devices = response["payload"]["devices"]
+                    self._discovered_devices = {}
+                    for device in response["payload"]["devices"]:
+                        self._discovered_devices[device["id"]] = device
                 # else:
                 #     self._discovered_devices = None
             else:
                 _LOGGER.debug("Discovery: Use cached info")
-        return self._discovered_devices
+        return list(self._discovered_devices.values())
 
     def discover_devices(self):
         devices = self.discovery()
@@ -173,7 +176,7 @@ class TuyaApi:
         if response and response["header"]["code"] == "SUCCESS":
             success = True
             if (action == "turnOnOff"):
-                self._update_device_status(devId, param["value"] == "1")
+                self._update_device_status(devId, strtobool(param["value"]))
         else:
             success = False
         return success, response
@@ -212,9 +215,8 @@ class TuyaApi:
         return response_json
 
     def _update_device_status(self, dev_id, new_state):
-        for device in self._discovered_devices:
-            if device["id"] == dev_id:
-                device["data"]["state"] = new_state
+        if self._discovered_devices[dev_id]:
+            self._discovered_devices[dev_id]["data"]["state"] = new_state
 
 class TuyaAPIException(Exception):
     pass
