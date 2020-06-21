@@ -42,11 +42,10 @@ class TuyaDevice:
     def update(self):
         """Avoid get cache value after control."""
         time.sleep(0.5)
-        success, response = self.api.device_control(
-            self.obj_id, "QueryDevice", namespace="query"
-        )
-        if success:
-            # _LOGGER.info(response)
-            self.data = response["payload"]["data"]
-            return True
-        return
+        devices = self.api.discovery()
+        if not devices:
+            return
+        for device in devices:
+            if device["id"] == self.obj_id:
+                self.data = device["data"]
+                return True

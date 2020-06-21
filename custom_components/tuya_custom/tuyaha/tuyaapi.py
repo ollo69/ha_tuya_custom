@@ -40,6 +40,7 @@ class TuyaApi:
     def __init__(self):
         self._discovered_devices = None
         self._last_discover = None
+        self._discover_wait = 15
 
     def init(self, username, password, countryCode, bizType=""):
         SESSION.username = username
@@ -119,17 +120,12 @@ class TuyaApi:
         self.check_access_token()
         return self.discover_devices()
 
-    def update_device_status(self, dev_id, new_state):
-        for device in self._discovered_devices:
-            if device["id"] == dev_id:
-                device["data"]["state"] = new_state
-
     def call_discovery(self):
         if not self._last_discover:
             self._last_discover = datetime.now()
             return True
         difference = (datetime.now() - self._last_discover).total_seconds()
-        if difference > 15:
+        if difference > self._discover_wait:
             self._last_discover = datetime.now()
             return True
         return False
@@ -176,6 +172,8 @@ class TuyaApi:
         response = self._request(action, namespace, devId, param)
         if response and response["header"]["code"] == "SUCCESS":
             success = True
+            if (action == "turnOnOff"):
+                self._update_device_status(devId, param["value"] == "1")
         else:
             success = False
         return success, response
@@ -200,11 +198,23 @@ class TuyaApi:
         response_json = response.json()
         _LOGGER.debug("Tuya request post: %s", response_json)
         if response_json["header"]["code"] != "SUCCESS":
-            _LOGGER.debug(
-                "control device error, error code is " + response_json["header"]["code"]
+            error_code = response_json["header"]["code"]
+            if (error_code == "FrequentlyInvoke"):
+                self._discover_wait = min(300, self._discover_wait + 15)
+            _LOGGER.warning(
+                "request error, error code is %s, name %s, discover wait %d sec",
+                response_json["header"]["code"],
+                name,
+                self._discover_wait,
             )
+        else:
+            self._discover_wait = max(15, self._discover_wait - 15)
         return response_json
 
+    def _update_device_status(self, dev_id, new_state):
+        for device in self._discovered_devices:
+            if device["id"] == dev_id:
+                device["data"]["state"] = new_state
 
 class TuyaAPIException(Exception):
     pass
