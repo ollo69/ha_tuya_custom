@@ -41,7 +41,7 @@ class TuyaApi:
     def __init__(self):
         self._discovered_devices = None
         self._last_discover = None
-        self._discover_wait = 15
+        self._discover_wait = 5
 
     def init(self, username, password, countryCode, bizType=""):
         SESSION.username = username
@@ -203,7 +203,7 @@ class TuyaApi:
         if response_json["header"]["code"] != "SUCCESS":
             error_code = response_json["header"]["code"]
             if (error_code == "FrequentlyInvoke"):
-                self._discover_wait = min(300, self._discover_wait + 15)
+                self._discover_wait = min(300, self._discover_wait + 10)
             _LOGGER.warning(
                 "request error, error code is %s, name %s, discover wait %d sec",
                 response_json["header"]["code"],
@@ -211,7 +211,7 @@ class TuyaApi:
                 self._discover_wait,
             )
         else:
-            self._discover_wait = max(15, self._discover_wait - 15)
+            self._discover_wait = max(5, self._discover_wait - 10)
         return response_json
 
     def _update_device_status(self, dev_id, new_state):
