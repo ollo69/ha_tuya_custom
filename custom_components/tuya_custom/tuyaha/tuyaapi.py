@@ -42,7 +42,7 @@ class TuyaApi:
     def __init__(self):
         self._discovered_devices = None
         self._last_request = None
-        self._discover_wait = 65
+        self._discover_wait = 60
 
     def init(self, username, password, countryCode, bizType=""):
         SESSION.username = username
