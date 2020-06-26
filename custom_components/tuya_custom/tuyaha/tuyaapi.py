@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import math
 
 import requests
 from datetime import datetime
@@ -40,8 +41,8 @@ class TuyaApi:
 
     def __init__(self):
         self._discovered_devices = None
-        self._last_discover = None
-        self._discover_wait = 30
+        self._last_request = None
+        self._discover_wait = 65
 
     def init(self, username, password, countryCode, bizType=""):
         SESSION.username = username
@@ -122,12 +123,10 @@ class TuyaApi:
         return self.discover_devices()
 
     def call_discovery(self):
-        if not self._last_discover:
-            self._last_discover = datetime.now()
+        if not self._discovered_devices:
             return True
-        difference = (datetime.now() - self._last_discover).total_seconds()
+        difference = math.floor((datetime.now() - self._last_request).total_seconds())
         if difference > self._discover_wait:
-            self._last_discover = datetime.now()
             return True
         return False
 
@@ -182,6 +181,7 @@ class TuyaApi:
         return success, response
 
     def _request(self, name, namespace, devId=None, payload={}):
+        self._last_request = datetime.now()
         header = {"name": name, "namespace": namespace, "payloadVersion": 1}
         payload["accessToken"] = SESSION.accessToken
         if namespace != "discovery":
@@ -202,16 +202,12 @@ class TuyaApi:
         _LOGGER.debug("Tuya request post: %s", response_json)
         if response_json["header"]["code"] != "SUCCESS":
             error_code = response_json["header"]["code"]
-            if (error_code == "FrequentlyInvoke"):
-                self._discover_wait = min(300, self._discover_wait + 30)
             _LOGGER.warning(
                 "request error, error code is %s, name %s, discover wait %d sec",
                 response_json["header"]["code"],
                 name,
                 self._discover_wait,
             )
-        else:
-            self._discover_wait = max(30, self._discover_wait - 30)
         return response_json
 
     def _update_device_status(self, dev_id, new_state):
