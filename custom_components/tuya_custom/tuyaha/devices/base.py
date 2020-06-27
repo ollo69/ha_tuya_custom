@@ -1,6 +1,8 @@
 import time
 import logging
 
+from distutils.util import strtobool
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -14,15 +16,48 @@ class TuyaDevice:
         self.dev_type = data.get("dev_type")
         self.icon = data.get("icon")
 
+    def _update_data(self, key, value):
+        if self.data:
+            if self.data.get(key) is None:
+                return
+            self.data[key] = value
+            self.api.update_device_data(self.obj_id, self.data)
+
+    def _update(self, use_discovery=False):
+        """Avoid get cache value after control."""
+        time.sleep(0.5)
+
+        if use_discovery:
+            # workaround for https://github.com/PaulAnnekov/tuyaha/issues/3
+            devices = self.api.discovery()
+            if not devices:
+                return
+            for device in devices:
+                if device["id"] == self.obj_id:
+                    self.data = device["data"]
+                    return True
+            return
+
+        success, response = self.api.device_control(
+            self.obj_id, "QueryDevice", namespace="query"
+        )
+        if success:
+            # _LOGGER.info(response)
+            self.data = response["payload"]["data"]
+            return True
+        return
+
     def name(self):
         return self.obj_name
 
     def state(self):
         state = self.data.get("state")
-        if state == "true":
-            return True
+        if state is None:
+            return None
+        elif isinstance(state, str):
+            return strtobool(state)
         else:
-            return False
+            return bool(state)
 
     def device_type(self):
         return self.dev_type
@@ -40,13 +75,4 @@ class TuyaDevice:
         return self.icon
 
     def update(self):
-        """Avoid get cache value after control."""
-        time.sleep(0.5)
-        success, response = self.api.device_control(
-            self.obj_id, "QueryDevice", namespace="query"
-        )
-        if success:
-            # _LOGGER.info(response)
-            self.data = response["payload"]["data"]
-            return True
-        return
+        return self._update()

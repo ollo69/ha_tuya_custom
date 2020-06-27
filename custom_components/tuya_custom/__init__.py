@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ENTRY_IS_SETUP = "tuya_entry_is_setup"
 
-PARALLEL_UPDATES = 0
+# PARALLEL_UPDATES = 0
 
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
