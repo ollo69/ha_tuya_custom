@@ -13,8 +13,8 @@ from .devices.factory import get_tuya_device
 TUYACLOUDURL = "https://px1.tuya{}.com"
 DEFAULTREGION = "us"
 
-MIN_DISCOVERY_INTERVAL = 60
-MAX_DISCOVERY_INTERVAL = 130
+MIN_DISCOVERY_INTERVAL = 15
+MAX_DISCOVERY_INTERVAL = 45
 REFRESHTIME = 60 * 60 * 12
 
 _LOGGER = logging.getLogger(__name__)
