@@ -23,6 +23,12 @@ class TuyaDevice:
             self.data[key] = value
             self.api.update_device_data(self.obj_id, self.data)
 
+    def _control_device(self, action, param=None):
+        success, response = self.api.device_control(self.obj_id, action, param)
+        if not success:
+            self._update_data("online", False)
+        return success
+
     def _update(self, use_discovery=False):
         """Avoid get cache value after control."""
         time.sleep(0.5)
