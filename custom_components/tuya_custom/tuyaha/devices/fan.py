@@ -17,20 +17,27 @@ class TuyaFanDevice(TuyaDevice):
         return self.data.get("direction")
 
     def set_speed(self, speed):
-        self.api.device_control(self.obj_id, "windSpeedSet", {"value": speed})
+        if self._control_device("windSpeedSet", {"value": speed})
+            self._update_data("speed", speed)
 
     def oscillate(self, oscillating):
         if oscillating:
             command = "swingOpen"
         else:
             command = "swingClose"
-        self.api.device_control(self.obj_id, command)
+        if self._control_device(command)
+            self._update_data("direction", oscillating)
 
     def turn_on(self):
-        self.api.device_control(self.obj_id, "turnOnOff", {"value": "1"})
+        if self._control_device("turnOnOff", {"value": "1"}):
+            self._update_data("state", True)
 
     def turn_off(self):
-        self.api.device_control(self.obj_id, "turnOnOff", {"value": "0"})
+        if self._control_device("turnOnOff", {"value": "0"}):
+            self._update_data("state", False)
+
+    def update(self):
+        return self._update(use_discovery=True)
 
     def support_oscillate(self):
         if self.oscillating() is None:

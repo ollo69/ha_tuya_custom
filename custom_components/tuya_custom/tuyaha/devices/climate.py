@@ -65,9 +65,8 @@ class TuyaClimate(TuyaDevice):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        self.api.device_control(
-            self.obj_id, "temperatureSet", {"value": float(temperature)}
-        )
+        if self._control_device("temperatureSet", {"value": float(temperature)})
+            self._update_data("temperature", temperature)
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
@@ -75,11 +74,13 @@ class TuyaClimate(TuyaDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        self.api.device_control(self.obj_id, "windSpeedSet", {"value": fan_mode})
+        if self._control_device("windSpeedSet", {"value": fan_mode})
+            self._update_data("windspeed", fan_mode)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        self.api.device_control(self.obj_id, "modeSet", {"value": operation_mode})
+        if self._control_device("modeSet", {"value": operation_mode})
+            self._update_data("mode", operation_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
@@ -110,7 +111,12 @@ class TuyaClimate(TuyaDevice):
             return False
 
     def turn_on(self):
-        self.api.device_control(self.obj_id, "turnOnOff", {"value": "1"})
+        if self._control_device("turnOnOff", {"value": "1"}):
+            self._update_data("state", True)
 
     def turn_off(self):
-        self.api.device_control(self.obj_id, "turnOnOff", {"value": "0"})
+        if self._control_device("turnOnOff", {"value": "0"}):
+            self._update_data("state", False)
+
+    def update(self):
+        return self._update(use_discovery=True)
