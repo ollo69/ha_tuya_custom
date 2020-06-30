@@ -17,7 +17,7 @@ class TuyaFanDevice(TuyaDevice):
         return self.data.get("direction")
 
     def set_speed(self, speed):
-        if self._control_device("windSpeedSet", {"value": speed})
+        if self._control_device("windSpeedSet", {"value": speed}):
             self._update_data("speed", speed)
 
     def oscillate(self, oscillating):
@@ -25,7 +25,7 @@ class TuyaFanDevice(TuyaDevice):
             command = "swingOpen"
         else:
             command = "swingClose"
-        if self._control_device(command)
+        if self._control_device(command):
             self._update_data("direction", oscillating)
 
     def turn_on(self):

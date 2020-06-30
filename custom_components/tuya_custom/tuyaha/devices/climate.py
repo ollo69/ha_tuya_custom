@@ -65,7 +65,7 @@ class TuyaClimate(TuyaDevice):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        if self._control_device("temperatureSet", {"value": float(temperature)})
+        if self._control_device("temperatureSet", {"value": float(temperature)}):
             self._update_data("temperature", temperature)
 
     def set_humidity(self, humidity):
@@ -74,12 +74,12 @@ class TuyaClimate(TuyaDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        if self._control_device("windSpeedSet", {"value": fan_mode})
+        if self._control_device("windSpeedSet", {"value": fan_mode}):
             self._update_data("windspeed", fan_mode)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        if self._control_device("modeSet", {"value": operation_mode})
+        if self._control_device("modeSet", {"value": operation_mode}):
             self._update_data("mode", operation_mode)
 
     def set_swing_mode(self, swing_mode):
