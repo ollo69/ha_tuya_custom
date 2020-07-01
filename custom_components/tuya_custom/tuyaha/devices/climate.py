@@ -75,7 +75,12 @@ class TuyaClimate(TuyaDevice):
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if self._control_device("windSpeedSet", {"value": fan_mode}):
-            self._update_data("windspeed", fan_mode)
+            fanList = self.fan_list()
+            if fan_mode in fanList:
+                val = str(fanList.index(fan_mode) + 1)
+            else:
+                val = fan_mode
+            self._update_data("windspeed", val)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -112,11 +117,11 @@ class TuyaClimate(TuyaDevice):
 
     def turn_on(self):
         if self._control_device("turnOnOff", {"value": "1"}):
-            self._update_data("state", True)
+            self._update_data("state", "true")
 
     def turn_off(self):
         if self._control_device("turnOnOff", {"value": "0"}):
-            self._update_data("state", False)
+            self._update_data("state", "false")
 
     def update(self):
         return self._update(use_discovery=True)
