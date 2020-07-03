@@ -1,6 +1,5 @@
 from .base import TuyaDevice
 
-
 class TuyaLight(TuyaDevice):
 
     def brightness(self):
@@ -35,7 +34,6 @@ class TuyaLight(TuyaDevice):
             work_mode = self.data.get("color_mode")
             color = self.data.get("color")
             if work_mode == "colour" and color:
-                color = self.data.get("color")
                 return color.get("hue"), color.get("saturation")
             else:
                 return 0.0, 0.0
@@ -82,7 +80,6 @@ class TuyaLight(TuyaDevice):
             hsv_color["hue"] = 0
         if self._control_device("colorSet", {"color": hsv_color}):
             self._update_data("color", hsv_color)
-            self._update_data("color_mode", "white" if hsv_color["saturation"] == 0 else "colour")
 
     def set_color_temp(self, color_temp):
         if self._control_device("colorTemperatureSet", {"value": color_temp}):
