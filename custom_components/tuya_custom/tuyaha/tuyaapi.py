@@ -154,7 +154,7 @@ class TuyaApi:
                         self._discovered_devices = response["payload"]["devices"]
                     elif result_code == "FrequentlyInvoke":
                         self._discovery_interval = MAX_DISCOVERY_INTERVAL
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             "Discovery FrequentlyInvoke error after %s success",
                             str(self._success_counter),
                         )
