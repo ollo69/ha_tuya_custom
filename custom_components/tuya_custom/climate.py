@@ -184,9 +184,17 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._tuya.min_temp()
+        min_temp = self._tuya.min_temp()
+        def_min_temp = super(TuyaClimateEntity, self).min_temp
+        if min_temp < def_min_temp:
+            return def_min_temp
+        return float(min_temp)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._tuya.max_temp()
+        max_temp = self._tuya.max_temp()
+        def_max_temp = super(TuyaClimateEntity, self).max_temp
+        if max_temp > def_max_temp:
+            return def_max_temp
+        return float(max_temp)

@@ -2,8 +2,18 @@ from .base import TuyaDevice
 
 
 class TuyaClimate(TuyaDevice):
+
+    def __init__(self, data, api):
+        super().__init__(data, api)
+        self._unit = None
+
     def temperature_unit(self):
-        return self.data.get("temp_unit")
+        if not self._unit:
+            if self.current_temperature() > 40:
+                self._unit = "FAHRENHEIT"
+            else:
+                self._unit = self.data.get("temp_unit")
+        return self._unit
 
     def current_humidity(self):
         pass
@@ -18,7 +28,10 @@ class TuyaClimate(TuyaDevice):
         return self.data.get("support_mode")
 
     def current_temperature(self):
-        return self.data.get("current_temperature")
+        curr_temp = self.data.get("current_temperature")
+        if not curr_temp:
+            return self.target_temperature()
+        return curr_temp
 
     def target_temperature(self):
         return self.data.get("temperature")
@@ -66,7 +79,7 @@ class TuyaClimate(TuyaDevice):
     def set_temperature(self, temperature):
         """Set new target temperature."""
         if self._control_device("temperatureSet", {"value": float(temperature)}):
-            self._update_data("temperature", temperature)
+            self._update_data("temperature", float(temperature))
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
