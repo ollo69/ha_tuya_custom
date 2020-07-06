@@ -6,10 +6,25 @@ class TuyaClimate(TuyaDevice):
     def __init__(self, data, api):
         super().__init__(data, api)
         self._unit = None
+        self._divider = 0
+
+    def _set_decimal(self, val):
+        if val is None:
+            return None
+        if self._divider == 0:
+            if val > 500 or val < -100:
+                self._divider = 100
+            else:
+                self._divider = 1
+
+        return round(float(val / self._divider), 2)
+
+    def has_decimal(self):
+        return self._divider > 1
 
     def temperature_unit(self):
         if not self._unit:
-            if self.current_temperature() > 40:
+            if self.current_temperature() > 40 and not self.has_decimal():
                 self._unit = "FAHRENHEIT"
             else:
                 self._unit = self.data.get("temp_unit")
@@ -28,13 +43,13 @@ class TuyaClimate(TuyaDevice):
         return self.data.get("support_mode")
 
     def current_temperature(self):
-        curr_temp = self.data.get("current_temperature")
+        curr_temp = self._set_decimal(self.data.get("current_temperature"))
         if not curr_temp:
             return self.target_temperature()
         return curr_temp
 
     def target_temperature(self):
-        return self.data.get("temperature")
+        return self._set_decimal(self.data.get("temperature"))
 
     def target_temperature_step(self):
         return 0.5
@@ -65,10 +80,10 @@ class TuyaClimate(TuyaDevice):
         return None
 
     def min_temp(self):
-        return self.data.get("min_temper")
+        return self._set_decimal(self.data.get("min_temper"))
 
     def max_temp(self):
-        return self.data.get("max_temper")
+        return self._set_decimal(self.data.get("max_temper"))
 
     def min_humidity(self):
         pass
@@ -78,8 +93,11 @@ class TuyaClimate(TuyaDevice):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        if self._control_device("temperatureSet", {"value": float(temperature)}):
-            self._update_data("temperature", float(temperature))
+        if self._divider == 0:
+            return
+        temp_val = round(float(temperature) * self._divider)
+        if self._control_device("temperatureSet", {"value": temp_val}):
+            self._update_data("temperature", temp_val)
 
     def set_humidity(self, humidity):
         """Set new target humidity."""

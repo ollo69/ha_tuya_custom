@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
+    PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -101,6 +102,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        if self._tuya.has_decimal():
+            return PRECISION_TENTHS
         return PRECISION_WHOLE
 
     @property
@@ -185,16 +188,18 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     def min_temp(self):
         """Return the minimum temperature."""
         min_temp = self._tuya.min_temp()
-        def_min_temp = super(TuyaClimateEntity, self).min_temp
-        if min_temp < def_min_temp:
-            return def_min_temp
-        return float(min_temp)
+        if self._tuya.has_decimal():
+            return min_temp
+        if min_temp != 0:
+            return min_temp
+        return super(TuyaClimateEntity, self).min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         max_temp = self._tuya.max_temp()
-        def_max_temp = super(TuyaClimateEntity, self).max_temp
-        if max_temp > def_max_temp:
-            return def_max_temp
-        return float(max_temp)
+        if self._tuya.has_decimal():
+            return max_temp
+        if max_temp != 100:
+            return max_temp
+        return super(TuyaClimateEntity, self).max_temp
