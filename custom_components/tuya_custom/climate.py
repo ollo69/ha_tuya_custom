@@ -8,10 +8,10 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -34,7 +34,7 @@ DEVICE_TYPE = "climate"
 PARALLEL_UPDATES = 0
 
 HA_STATE_TO_TUYA = {
-    HVAC_MODE_AUTO: "auto",
+    HVAC_MODE_HEAT_COOL: "auto",
     HVAC_MODE_COOL: "cold",
     HVAC_MODE_FAN_ONLY: "wind",
     HVAC_MODE_HEAT: "hot",
@@ -87,17 +87,20 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
         self.operations = [HVAC_MODE_OFF]
+        self._has_operation = False
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
         modes = self._tuya.operation_list()
         if modes is None:
+            self.operations.append(HVAC_MODE_HEAT_COOL)
             return
 
         for mode in modes:
             if mode in TUYA_STATE_TO_HA:
                 self.operations.append(TUYA_STATE_TO_HA[mode])
+                self._has_operation = True
 
     @property
     def precision(self):
@@ -119,6 +122,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if not self._tuya.state():
             return HVAC_MODE_OFF
+
+        if not self._has_operation:
+            return HVAC_MODE_HEAT_COOL
 
         mode = self._tuya.current_operation()
         if mode is None:
@@ -172,7 +178,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         if not self._tuya.state():
             self._tuya.turn_on()
 
-        self._tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
+        if self._has_operation:
+            self._tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
 
     @property
     def supported_features(self):
@@ -188,18 +195,20 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     def min_temp(self):
         """Return the minimum temperature."""
         min_temp = self._tuya.min_temp()
-        if self._tuya.has_decimal():
-            return min_temp
-        if min_temp != 0:
-            return min_temp
+        if min_temp is not None:
+            if self._tuya.has_decimal():
+                return min_temp
+            if min_temp != 0:
+                return min_temp
         return super(TuyaClimateEntity, self).min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         max_temp = self._tuya.max_temp()
-        if self._tuya.has_decimal():
-            return max_temp
-        if max_temp != 100:
-            return max_temp
+        if max_temp is not None:
+            if self._tuya.has_decimal():
+                return max_temp
+            if max_temp != 100:
+                return max_temp
         return super(TuyaClimateEntity, self).max_temp

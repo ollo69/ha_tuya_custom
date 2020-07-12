@@ -24,7 +24,11 @@ class TuyaClimate(TuyaDevice):
 
     def temperature_unit(self):
         if not self._unit:
-            if self.current_temperature() > 40 and not self.has_decimal():
+            curr_temp = self.current_temperature()
+            if curr_temp is None:
+                self._unit = "CELSIUS"
+                return self._unit
+            if curr_temp > 40 and not self.has_decimal():
                 self._unit = "FAHRENHEIT"
             else:
                 self._unit = self.data.get("temp_unit")
