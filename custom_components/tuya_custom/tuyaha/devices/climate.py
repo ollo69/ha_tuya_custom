@@ -7,20 +7,33 @@ class TuyaClimate(TuyaDevice):
         super().__init__(data, api)
         self._unit = None
         self._divider = 0
+        self._ct_divider = 0
 
-    def _set_decimal(self, val):
+    def _set_decimal(self, val, divider=0):
         if val is None:
             return None
-        if self._divider == 0:
-            if val > 500 or val < -100:
-                self._divider = 100
-            else:
-                self._divider = 1
+        if divider == 0:
+            divider = self._divider
+            if divider == 0:
+                if val > 500 or val < -100:
+                    divider = 100
+                else:
+                    divider = 1
+                self._divider = divider
 
-        return round(float(val / self._divider), 2)
+        return round(float(val / divider), 2)
+
+    def set_unit(self, unit):
+        self._unit = unit
+
+    def set_temp_divider(self, divider):
+        self._divider = divider
+
+    def set_curr_temp_divider(self, divider):
+        self._ct_divider = divider
 
     def has_decimal(self):
-        return self._divider > 1
+        return self._divider > 9
 
     def temperature_unit(self):
         if not self._unit:
@@ -28,7 +41,7 @@ class TuyaClimate(TuyaDevice):
             if curr_temp is None:
                 self._unit = "CELSIUS"
                 return self._unit
-            if curr_temp > 40 and not self.has_decimal():
+            if curr_temp > 50 and not self.has_decimal():
                 self._unit = "FAHRENHEIT"
             else:
                 self._unit = self.data.get("temp_unit")
@@ -47,7 +60,7 @@ class TuyaClimate(TuyaDevice):
         return self.data.get("support_mode")
 
     def current_temperature(self):
-        curr_temp = self._set_decimal(self.data.get("current_temperature"))
+        curr_temp = self._set_decimal(self.data.get("current_temperature"), self._ct_divider)
         if not curr_temp:
             return self.target_temperature()
         return curr_temp

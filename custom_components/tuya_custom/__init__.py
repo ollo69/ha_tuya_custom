@@ -7,7 +7,12 @@ from .tuyaha.tuyaapi import TuyaApi, TuyaAPIException, TuyaNetException, TuyaSer
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -20,14 +25,19 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_COUNTRYCODE,
+    CONF_DEVICE_NAME,
+    CONF_TEMP_DIVIDER,
+    CONF_CURR_TEMP_DIVIDER,
     DOMAIN,
     TUYA_DATA,
+    TUYA_DEVICES_CONF,
     TUYA_DISCOVERY_NEW,
     TUYA_PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_TUYA_DEV_ID = "tuya_device_id"
 ENTRY_IS_SETUP = "tuya_entry_is_setup"
 
 # PARALLEL_UPDATES = 0
@@ -49,18 +59,34 @@ TUYA_TYPE_TO_HA = {
 
 TUYA_TRACKER = "tuya_tracker"
 
+TUYA_DEVICE_CONF_SCHEMA = {
+    vol.Optional(TUYA_DEVICES_CONF): vol.All(
+        cv.ensure_list,
+        [
+            vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE_NAME): cv.string,
+                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.temperature_unit,
+                    vol.Optional(CONF_TEMP_DIVIDER, default=0): cv.positive_int,
+                    vol.Optional(CONF_CURR_TEMP_DIVIDER, default=0): cv.positive_int,
+                }
+            )
+        ],
+    )
+}
+
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_COUNTRYCODE): cv.string,
+                    vol.Optional(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_COUNTRYCODE): cv.string,
+                    vol.Optional(CONF_PASSWORD): cv.string,
                     vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
+                    # vol.Optional(TUYA_DEVICE_CONF_SCHEMA): vol.Schema,
                 }
-            )
+            ).extend(TUYA_DEVICE_CONF_SCHEMA)
         },
     ),
     extra=vol.ALLOW_EXTRA,
@@ -70,13 +96,24 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Tuya integration."""
 
+    hass.data[DOMAIN] = {
+        TUYA_DEVICES_CONF: {}
+    }
     conf = config.get(DOMAIN)
     if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        devices_config = conf.get(TUYA_DEVICES_CONF)
+        if devices_config:
+            hass.data[DOMAIN][TUYA_DEVICES_CONF] = devices_config
+
+        user = conf.get(CONF_USERNAME)
+        pwd = conf.get(CONF_PASSWORD)
+        country = conf.get(CONF_COUNTRYCODE)
+        if user and pwd and country:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                )
             )
-        )
 
     return True
 
@@ -103,13 +140,13 @@ async def async_setup_entry(hass, entry):
         )
         return False
 
-    hass.data[DOMAIN] = {
+    hass.data.setdefault(DOMAIN, {}).update({
         TUYA_DATA: tuya,
         TUYA_TRACKER: None,
         ENTRY_IS_SETUP: set(),
         "entities": {},
         "pending": {},
-    }
+    })
 
     async def async_load_devices(device_list):
         """Load new devices by device_list."""
@@ -193,6 +230,7 @@ async def async_unload_entry(hass, entry):
         hass.data[DOMAIN][TUYA_TRACKER]()
         hass.data[DOMAIN][TUYA_TRACKER] = None
         hass.data[DOMAIN][TUYA_DATA] = None
+        hass.data[DOMAIN].pop(TUYA_DEVICES_CONF)
         hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
         hass.services.async_remove(DOMAIN, SERVICE_PULL_DEVICES)
         hass.data.pop(DOMAIN)
@@ -218,9 +256,23 @@ class TuyaDevice(Entity):
         """Init Tuya devices."""
         self._tuya = tuya
         self._tuya_platform = platform
+        self._dev_conf = None
+
+    def _get_device_config(self):
+        devices_config = self.hass.data[DOMAIN].get(TUYA_DEVICES_CONF)
+        if devices_config:
+            dev_key = (self.name.lower()).replace(" ", "_")
+            for conf_info in devices_config:
+                conf_key = (conf_info[CONF_DEVICE_NAME].lower()).replace(" ", "_")
+                if conf_key == dev_key:
+                    _LOGGER.debug("Configuration for device: %s", str(conf_info))
+                    return conf_info
+        return []
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
+        if self._dev_conf is None:
+            self._dev_conf = self._get_device_config()
         dev_id = self._tuya.object_id()
         self.hass.data[DOMAIN]["entities"][dev_id] = self.entity_id
         async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
@@ -245,6 +297,14 @@ class TuyaDevice(Entity):
     def available(self):
         """Return if the device is available."""
         return self._tuya.available()
+
+    @property
+    def state_attributes(self):
+        """Return the optional state attributes."""
+        data = {
+            ATTR_TUYA_DEV_ID: self.object_id,
+        }
+        return data
 
     @property
     def device_info(self):

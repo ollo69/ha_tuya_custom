@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
+    CONF_UNIT_OF_MEASUREMENT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
@@ -27,7 +28,13 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from .const import(
+    CONF_TEMP_DIVIDER,
+    CONF_CURR_TEMP_DIVIDER,
+    DOMAIN,
+    TUYA_DATA,
+    TUYA_DISCOVERY_NEW,
+)
 
 DEVICE_TYPE = "climate"
 
@@ -92,14 +99,31 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
+
+        if self._dev_conf:
+            unit = self._dev_conf.get(CONF_UNIT_OF_MEASUREMENT)
+            if unit:
+                self._tuya.set_unit(
+                    "FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS"
+                )
+            self._tuya.set_temp_divider(
+                self._dev_conf.get(CONF_TEMP_DIVIDER, 0)
+            )
+            self._tuya.set_curr_temp_divider(
+                self._dev_conf.get(CONF_CURR_TEMP_DIVIDER, 0)
+            )
+
         modes = self._tuya.operation_list()
         if modes is None:
-            self.operations.append(HVAC_MODE_HEAT_COOL)
+            if HVAC_MODE_HEAT_COOL not in self.operations:
+                self.operations.append(HVAC_MODE_HEAT_COOL)
             return
 
         for mode in modes:
             if mode in TUYA_STATE_TO_HA:
-                self.operations.append(TUYA_STATE_TO_HA[mode])
+                ha_mode = TUYA_STATE_TO_HA[mode]
+                if ha_mode not in self.operations:
+                    self.operations.append(ha_mode)
                 self._has_operation = True
 
     @property

@@ -209,9 +209,18 @@ class TuyaApi:
             payload["devId"] = devId
         data = {"header": header, "payload": payload}
         _LOGGER.debug("Tuya request pre: %s", data)
-        response = self.requestSession.post(
-            (TUYACLOUDURL + "/homeassistant/skill").format(SESSION.region), json=data
-        )
+        try:
+            response = self.requestSession.post(
+                (TUYACLOUDURL + "/homeassistant/skill").format(SESSION.region), json=data
+            )
+        except RequestsConnectionError as ex:
+            _LOGGER.debug(
+                "request error, error code is %s, device %s",
+                ex,
+                devId,
+            )
+            return
+
         if not response.ok:
             _LOGGER.warning(
                 "request error, status code is %d, device %s",

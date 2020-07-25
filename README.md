@@ -39,3 +39,21 @@ After a correct installation, your configuration directory should look like the 
 For the configuration use exactly the same options used to configure the standard Tuya component, however choosing the Tuya Custom component from the list of additions.
 
 **N.B. Before configuring this integration, remove the standard Tuya integration.**
+
+### Device parameters (configuration.yaml)
+
+To provide device information that in some case are not correctly provided by the cloud, you can use 
+configuration.yaml file. Following example of supported values:
+
+- For climate device:
+
+```
+tuya_custom:
+  devices_config:
+    - device_name: <Name of your device> # this is mandatory with at least one of the other keys
+      unit_of_measurement: "C" # "F" or "C", not set to use value provided from cloud
+      temp_divider: 1 # any positive number, all temperature values will be divided by this value
+      curr_temp_divider: 1  # any positive number, only current temperature values will be divided by this value
+```
+
+You can set configuration for multiple devices, adding one list that start with `- device_name:` for every device
