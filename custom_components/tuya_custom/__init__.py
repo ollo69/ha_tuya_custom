@@ -299,7 +299,7 @@ class TuyaDevice(Entity):
         return self._tuya.available()
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the optional state attributes."""
         data = {
             ATTR_TUYA_DEV_ID: self.object_id,
