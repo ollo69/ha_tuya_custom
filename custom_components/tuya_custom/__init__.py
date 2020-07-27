@@ -261,10 +261,12 @@ class TuyaDevice(Entity):
     def _get_device_config(self):
         devices_config = self.hass.data[DOMAIN].get(TUYA_DEVICES_CONF)
         if devices_config:
-            dev_key = (self.name.lower()).replace(" ", "_")
+            dev_id = self.object_id
+            dev_name = (self.name.lower()).replace(" ", "_")
             for conf_info in devices_config:
-                conf_key = (conf_info[CONF_DEVICE_NAME].lower()).replace(" ", "_")
-                if conf_key == dev_key:
+                conf_id = conf_info[CONF_DEVICE_NAME]
+                conf_name = (conf_id.lower()).replace(" ", "_")
+                if conf_name == dev_name or conf_id == dev_id:
                     _LOGGER.debug("Configuration for device: %s", str(conf_info))
                     return conf_info
         return []
