@@ -61,7 +61,7 @@ class TuyaClimate(TuyaDevice):
 
     def current_temperature(self):
         curr_temp = self._set_decimal(self.data.get("current_temperature"), self._ct_divider)
-        if not curr_temp:
+        if curr_temp is None:
             return self.target_temperature()
         return curr_temp
 
