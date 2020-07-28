@@ -40,7 +40,7 @@ class TuyaLight(TuyaDevice):
             work_mode = self.data.get("color_mode")
             color = self.data.get("color")
             if work_mode == "colour" and color:
-                return color.get("hue"), color.get("saturation")
+                return color.get("hue"), float(color.get("saturation")) * 100
             else:
                 return 0.0, 0.0
         else:
@@ -83,7 +83,7 @@ class TuyaLight(TuyaDevice):
         hsv_color["hue"] = color[0]
         hsv_color["saturation"] = color[1] / 100
         if len(color) < 3:
-            hsv_color["brightness"] = int(self.brightness()) / 255.0
+            hsv_color["brightness"] = float(self.data.get("brightness")) * 100 / 255.0
         else:
             hsv_color["brightness"] = color[2]
         # color white
