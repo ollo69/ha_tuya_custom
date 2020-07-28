@@ -4,6 +4,8 @@ CONF_COUNTRYCODE = "country_code"
 CONF_DEVICE_NAME = "device_name"
 CONF_TEMP_DIVIDER = "temp_divider"
 CONF_CURR_TEMP_DIVIDER = "curr_temp_divider"
+CONF_EXT_TEMP_SENSOR = "ext_temp_sensor"
+CONF_SUPPORT_COLOR = "support_color"
 
 DOMAIN = "tuya_custom"
 

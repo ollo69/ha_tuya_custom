@@ -45,6 +45,15 @@ For the configuration use exactly the same options used to configure the standar
 To provide device information that in some case are not correctly provided by the cloud, you can use 
 configuration.yaml file. Following example of supported values:
 
+- For light device:
+
+```
+tuya_custom:
+  devices_config:
+    - device_name: <Name of your device> # this is mandatory with at least one of the other keys
+      support_color: true # true or false, force color support for device
+```
+
 - For climate device:
 
 ```
@@ -54,6 +63,7 @@ tuya_custom:
       unit_of_measurement: "C" # "F" or "C", not set to use value provided from cloud
       temp_divider: 1 # any positive number, all temperature values will be divided by this value
       curr_temp_divider: 1  # any positive number, only current temperature values will be divided by this value
+      ext_temp_sensor: sensor.temp # a sensor that provide ambient temp used when not provided by device
 ```
 
 You can set configuration for multiple devices, adding one list that start with `- device_name:` for every device

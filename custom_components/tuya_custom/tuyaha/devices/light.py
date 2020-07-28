@@ -4,7 +4,15 @@ from .base import TuyaDevice
 MIN_BRIGHTNESS_VAL = 10.3
 MIN_BRIGHTNESS = 255 * MIN_BRIGHTNESS_VAL / 100
 
+
 class TuyaLight(TuyaDevice):
+
+    def __init__(self, data, api):
+        super().__init__(data, api)
+        self._support_color = False
+
+    def set_support_color(self, supported):
+        self._support_color = supported
 
     def brightness(self):
         work_mode = self.data.get("color_mode")
@@ -24,19 +32,16 @@ class TuyaLight(TuyaDevice):
             self.data["brightness"] = brightness
 
     def support_color(self):
-        if self.data.get("color") or self.data.get("color_mode") == "colour":
-            return True
-        else:
-            return False
+        if not self._support_color:
+            if self.data.get("color") or self.data.get("color_mode") == "colour":
+                self._support_color = True
+        return self._support_color
 
     def support_color_temp(self):
-        if self.data.get("color_temp") is None:
-            return False
-        else:
-            return True
+        return self.data.get("color_temp") is not None
 
     def hs_color(self):
-        if self.data.get("color") or self.data.get("color_mode") == "colour":
+        if self.support_color():
             work_mode = self.data.get("color_mode")
             color = self.data.get("color")
             if work_mode == "colour" and color:
@@ -47,10 +52,7 @@ class TuyaLight(TuyaDevice):
             return None
 
     def color_temp(self):
-        if self.data.get("color_temp") is None:
-            return None
-        else:
-            return self.data.get("color_temp")
+        return self.data.get("color_temp")
 
     def min_color_temp(self):
         return 10000
@@ -68,7 +70,7 @@ class TuyaLight(TuyaDevice):
 
     def set_brightness(self, brightness):
         """Set the brightness(0-255) of light."""
-        if (int(brightness) > 0):
+        if int(brightness) > 0:
             """Restore the value rescaled with MIN_BRIGHTNESS."""
             brightness = min(max(int(brightness / 255 * (255 - MIN_BRIGHTNESS) + MIN_BRIGHTNESS), MIN_BRIGHTNESS), 255)
             value = max(brightness * 100 / 255.0, MIN_BRIGHTNESS_VAL)
@@ -79,18 +81,19 @@ class TuyaLight(TuyaDevice):
 
     def set_color(self, color):
         """Set the color of light."""
-        hsv_color = {}
-        hsv_color["hue"] = color[0]
-        hsv_color["saturation"] = color[1] / 100
+        hsv_color = {
+            "hue": color[0] if color[1] != 0 else 0,  # color white
+            "saturation": color[1] / 100,
+        }
         if len(color) < 3:
             hsv_color["brightness"] = float(self.data.get("brightness")) * 100 / 255.0
         else:
             hsv_color["brightness"] = color[2]
         # color white
-        if hsv_color["saturation"] == 0:
-            hsv_color["hue"] = 0
+        # if hsv_color["saturation"] == 0:
+        #     hsv_color["hue"] = 0
         if self._control_device("colorSet", {"color": hsv_color}):
-            self._update_data("color", hsv_color)
+            self._update_data("color", hsv_color, force_val=True)
 
     def set_color_temp(self, color_temp):
         if self._control_device("colorTemperatureSet", {"value": color_temp}):

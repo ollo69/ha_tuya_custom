@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import color as colorutil
 
 from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from .const import CONF_SUPPORT_COLOR, DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
 PARALLEL_UPDATES = 0
 
@@ -61,6 +61,17 @@ class TuyaLight(TuyaDevice, LightEntity):
         """Init Tuya light device."""
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+
+    async def async_added_to_hass(self):
+        """set config parameter when add to hass."""
+        await super().async_added_to_hass()
+
+        if self._dev_conf:
+            self._tuya.set_support_color(
+                self._dev_conf.get(CONF_SUPPORT_COLOR, False)
+            )
+
+        return
 
     @property
     def brightness(self):

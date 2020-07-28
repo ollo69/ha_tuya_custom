@@ -14,8 +14,10 @@ class TuyaDevice:
         self.dev_type = data.get("dev_type")
         self.icon = data.get("icon")
 
-    def _update_data(self, key, value):
+    def _update_data(self, key, value, force_val=False):
         if self.data:
+            if not force_val and self.data.get(key) is None:
+                return
             self.data[key] = value
             self.api.update_device_data(self.obj_id, self.data)
 
@@ -37,8 +39,9 @@ class TuyaDevice:
             for device in devices:
                 if device["id"] == self.obj_id:
                     if not self.data:
-                        self.data = {}
-                    self.data.update(device["data"])
+                        self.data = device["data"]
+                    else:
+                        self.data.update(device["data"])
                     return True
             return
 

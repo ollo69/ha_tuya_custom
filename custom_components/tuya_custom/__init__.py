@@ -28,6 +28,8 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_TEMP_DIVIDER,
     CONF_CURR_TEMP_DIVIDER,
+    CONF_EXT_TEMP_SENSOR,
+    CONF_SUPPORT_COLOR,
     DOMAIN,
     TUYA_DATA,
     TUYA_DEVICES_CONF,
@@ -69,6 +71,8 @@ TUYA_DEVICE_CONF_SCHEMA = {
                     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.temperature_unit,
                     vol.Optional(CONF_TEMP_DIVIDER, default=0): cv.positive_int,
                     vol.Optional(CONF_CURR_TEMP_DIVIDER, default=0): cv.positive_int,
+                    vol.Optional(CONF_EXT_TEMP_SENSOR): cv.string,
+                    vol.Optional(CONF_SUPPORT_COLOR): cv.boolean,
                 }
             )
         ],
@@ -84,7 +88,6 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_COUNTRYCODE): cv.string,
                     vol.Optional(CONF_PASSWORD): cv.string,
                     vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
-                    # vol.Optional(TUYA_DEVICE_CONF_SCHEMA): vol.Schema,
                 }
             ).extend(TUYA_DEVICE_CONF_SCHEMA)
         },
