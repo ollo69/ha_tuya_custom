@@ -77,6 +77,7 @@ class TuyaLight(TuyaDevice):
         else:
             brightness = value = 0
         if self._control_device("brightnessSet", {"value": value}):
+            self._update_data("state", "true")
             self._update_data("brightness", brightness)
 
     def set_color(self, color):
@@ -93,10 +94,12 @@ class TuyaLight(TuyaDevice):
         # if hsv_color["saturation"] == 0:
         #     hsv_color["hue"] = 0
         if self._control_device("colorSet", {"color": hsv_color}):
+            self._update_data("state", "true")
             self._update_data("color", hsv_color, force_val=True)
 
     def set_color_temp(self, color_temp):
         if self._control_device("colorTemperatureSet", {"value": color_temp}):
+            self._update_data("state", "true")
             self._update_data("color_temp", color_temp)
 
     def update(self):
