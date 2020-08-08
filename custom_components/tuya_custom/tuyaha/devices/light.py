@@ -59,11 +59,17 @@ class TuyaLight(TuyaDevice):
         else:
             self._update_data("brightness", brightness)
 
-    def min_brightness(self):
-        return 1 if self._color_mode() else 10
+    def min_brightness(self, mode_color: bool = None):
+        if mode_color is True or (mode_color is None and self._color_mode()):
+            return 1
+        else:
+            return 10
 
-    def max_brightness(self):
-        return 255 if self._color_mode() else 1000
+    def max_brightness(self, mode_color: bool = None):
+        if mode_color is True or (mode_color is None and self._color_mode()):
+            return 255
+        else:
+            return 1000
 
     def support_color(self):
         if not self._support_color:
@@ -115,7 +121,9 @@ class TuyaLight(TuyaDevice):
 
     def set_color(self, color):
         """Set the color of light."""
-        cur_brightness = self.data.get("color", {}).get("brightness", 1)
+        cur_brightness = self.data.get("color", {}).get(
+            "brightness", self.min_brightness(mode_color=True)
+        )
         hsv_color = {
             "hue": color[0] if color[1] != 0 else 0,  # color white
             "saturation": color[1] / 100,
