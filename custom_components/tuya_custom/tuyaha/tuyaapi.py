@@ -154,6 +154,8 @@ class TuyaApi:
                         self._discovery_interval = MIN_DISCOVERY_INTERVAL
                         self._success_counter += 1
                         self._discovered_devices = response["payload"]["devices"]
+                        # _LOGGER.info("Tuya discovery response: %s", response)
+
                     elif result_code == "FrequentlyInvoke":
                         self._discovery_interval = MAX_DISCOVERY_INTERVAL
                         _LOGGER.debug(
@@ -208,7 +210,6 @@ class TuyaApi:
         if namespace != "discovery":
             payload["devId"] = devId
         data = {"header": header, "payload": payload}
-        _LOGGER.debug("Tuya request pre: %s", data)
         try:
             response = self.requestSession.post(
                 (TUYACLOUDURL + "/homeassistant/skill").format(SESSION.region), json=data
@@ -229,7 +230,7 @@ class TuyaApi:
             )
             return
         response_json = response.json()
-        _LOGGER.debug("Tuya request post: %s", response_json)
+        _LOGGER.debug("Tuya request response: %s", response_json)
         if response_json["header"]["code"] != "SUCCESS":
             _LOGGER.debug(
                 "control device error, error code is " + response_json["header"]["code"]

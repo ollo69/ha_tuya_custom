@@ -50,7 +50,7 @@ configuration.yaml file. Following example of supported values:
 ```
 tuya_custom:
   devices_config:
-    - device_name: <Name of your device> # this is mandatory with at least one of the other keys
+    - device_name: <Friendly Name of your device in HA> # this is mandatory with at least one of the other keys
       support_color: true # true or false, force color support for device
 ```
 
@@ -59,7 +59,7 @@ tuya_custom:
 ```
 tuya_custom:
   devices_config:
-    - device_name: <Name of your device> # this is mandatory with at least one of the other keys
+    - device_name: <Friendly Name of your device in HA> # this is mandatory with at least one of the other keys
       unit_of_measurement: "C" # "F" or "C", not set to use value provided from cloud
       temp_divider: 1 # any positive number, all temperature values will be divided by this value
       curr_temp_divider: 1  # any positive number, only current temperature values will be divided by this value
