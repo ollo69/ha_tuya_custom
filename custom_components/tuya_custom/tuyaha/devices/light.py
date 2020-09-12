@@ -2,6 +2,9 @@ from .base import TuyaDevice
 
 """The minimum brightness value set in the API that does not turn off the light."""
 MIN_BRIGHTNESS = 10.3
+BRIGHTNESS_WHITE_RANGE = (10, 1000)
+BRIGHTNESS_COLOR_RANGE = (1, 255)
+BRIGHTNESS_STD_RANGE = (1, 255)
 
 
 class TuyaLight(TuyaDevice):
@@ -18,29 +21,11 @@ class TuyaLight(TuyaDevice):
         return True if work_mode == "colour" else False
 
     @staticmethod
-    def _convert_scale(value, old_min, old_max, new_min, new_max):
-        if value == 0:
-            return 0
-        new_val = max(min(value, old_max), old_min)
-        return max(round((new_val / old_max) * new_max), new_min)
-
-    def _standard_brightness(self, value):
-        return TuyaLight._convert_scale(
-            value,
-            self.min_brightness(),
-            self.max_brightness(),
-            1,
-            255,
-        )
-
-    def _tuya_brightness(self, value):
-        return TuyaLight._convert_scale(
-            value,
-            1,
-            255,
-            self.min_brightness(),
-            self.max_brightness(),
-        )
+    def _scale(val, src, dst):
+        """Scale the given value from the scale of src to the scale of dst."""
+        if val < 0:
+            return dst[0]
+        return ((val - src[0]) / (src[1] - src[0])) * (dst[1] - dst[0]) + dst[0]
 
     def brightness(self):
         brightness = -1
@@ -49,7 +34,12 @@ class TuyaLight(TuyaDevice):
                 brightness = int(self.data.get("color").get("brightness", "-1"))
         else:
             brightness = int(self.data.get("brightness", "-1"))
-        return self._standard_brightness(brightness)
+        ret_val = TuyaLight._scale(
+            brightness,
+            self._brightness_range(),
+            BRIGHTNESS_STD_RANGE,
+        )
+        return round(ret_val)
 
     def _set_brightness(self, brightness):
         if self._color_mode():
@@ -59,17 +49,11 @@ class TuyaLight(TuyaDevice):
         else:
             self._update_data("brightness", brightness)
 
-    def min_brightness(self, mode_color: bool = None):
-        if mode_color is True or (mode_color is None and self._color_mode()):
-            return 1
+    def _brightness_range(self):
+        if self._color_mode():
+            return BRIGHTNESS_COLOR_RANGE
         else:
-            return 10
-
-    def max_brightness(self, mode_color: bool = None):
-        if mode_color is True or (mode_color is None and self._color_mode()):
-            return 255
-        else:
-            return 1000
+            return BRIGHTNESS_WHITE_RANGE
 
     def support_color(self):
         if not self._support_color:
@@ -111,18 +95,26 @@ class TuyaLight(TuyaDevice):
         """Set the brightness(0-255) of light."""
         if int(brightness) > 0:
             """convert to scale 0-100 with MIN_BRIGHTNESS."""
-            set_value = round(min(max(brightness * 100 / 255.0, MIN_BRIGHTNESS), 100), 1)
-            value = self._tuya_brightness(brightness)
-            if self._control_device("brightnessSet", {"value": set_value}):
+            set_value = TuyaLight._scale(
+                brightness,
+                BRIGHTNESS_STD_RANGE,
+                (MIN_BRIGHTNESS, 100),
+            )
+            value = TuyaLight._scale(
+                brightness,
+                BRIGHTNESS_STD_RANGE,
+                self._brightness_range(),
+            )
+            if self._control_device("brightnessSet", {"value": round(set_value, 1)}):
                 self._update_data("state", "true")
-                self._set_brightness(value)
+                self._set_brightness(round(value))
         else:
             self.turn_off()
 
     def set_color(self, color):
         """Set the color of light."""
         cur_brightness = self.data.get("color", {}).get(
-            "brightness", self.min_brightness(mode_color=True)
+            "brightness", BRIGHTNESS_COLOR_RANGE[0]
         )
         hsv_color = {
             "hue": color[0] if color[1] != 0 else 0,  # color white
