@@ -2,7 +2,7 @@ from .base import TuyaDevice
 
 """The minimum brightness value set in the API that does not turn off the light."""
 MIN_BRIGHTNESS = 10.3
-BRIGHTNESS_WHITE_RANGE = (10, 1000)
+BRIGHTNESS_WHITE_RANGE = (1, 255)
 BRIGHTNESS_COLOR_RANGE = (1, 255)
 BRIGHTNESS_STD_RANGE = (1, 255)
 
