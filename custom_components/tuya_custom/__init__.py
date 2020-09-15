@@ -24,12 +24,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_BRIGHTNESS_RANGE_MODE,
     CONF_COUNTRYCODE,
-    CONF_DEVICE_NAME,
-    CONF_TEMP_DIVIDER,
     CONF_CURR_TEMP_DIVIDER,
     CONF_EXT_TEMP_SENSOR,
+    CONF_DEVICE_NAME,
     CONF_SUPPORT_COLOR,
+    CONF_TEMP_DIVIDER,
     DOMAIN,
     TUYA_DATA,
     TUYA_DEVICES_CONF,
@@ -73,6 +74,7 @@ TUYA_DEVICE_CONF_SCHEMA = {
                     vol.Optional(CONF_CURR_TEMP_DIVIDER, default=0): cv.positive_int,
                     vol.Optional(CONF_EXT_TEMP_SENSOR): cv.string,
                     vol.Optional(CONF_SUPPORT_COLOR): cv.boolean,
+                    vol.Optional(CONF_BRIGHTNESS_RANGE_MODE, default=0): cv.positive_int,
                 }
             )
         ],

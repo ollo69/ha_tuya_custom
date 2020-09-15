@@ -42,7 +42,7 @@ from .const import(
 
 DEVICE_TYPE = "climate"
 
-PARALLEL_UPDATES = 0
+# PARALLEL_UPDATES = 0
 
 HA_STATE_TO_TUYA = {
     HVAC_MODE_HEAT_COOL: "auto",

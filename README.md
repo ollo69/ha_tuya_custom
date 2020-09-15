@@ -52,6 +52,8 @@ tuya_custom:
   devices_config:
     - device_name: <Friendly Name of your device in HA> # this is mandatory with at least one of the other keys
       support_color: true # true or false, force color support for device
+      brightness_range_mode: 0 # 0 = use brightness range 10-1000
+                               # 1 = use brightness range 1-255
 ```
 
 - For climate device:
