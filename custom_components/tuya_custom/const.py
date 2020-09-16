@@ -7,6 +7,7 @@ CONF_CURR_TEMP_DIVIDER = "curr_temp_divider"
 CONF_EXT_TEMP_SENSOR = "ext_temp_sensor"
 CONF_SUPPORT_COLOR = "support_color"
 CONF_BRIGHTNESS_RANGE_MODE = "brightness_range_mode"
+CONF_MAX_COLOR_TEMP = "max_color_temp"
 
 DOMAIN = "tuya_custom"
 

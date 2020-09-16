@@ -1,10 +1,13 @@
 import time
 import logging
+from datetime import datetime
 
+QUERY_INTERVAL = 60
 _LOGGER = logging.getLogger(__name__)
 
 
 class TuyaDevice:
+
     def __init__(self, data, api):
         self.api = api
         self.data = data.get("data")
@@ -13,6 +16,9 @@ class TuyaDevice:
         self.obj_name = data.get("name")
         self.dev_type = data.get("dev_type")
         self.icon = data.get("icon")
+        self._first_update = True
+        self._last_update = datetime.min
+        self._last_query = datetime.min
 
     def _update_data(self, key, value, force_val=False):
         if self.data:
@@ -25,33 +31,54 @@ class TuyaDevice:
         success, response = self.api.device_control(self.obj_id, action, param)
         if not success:
             self._update_data("online", False)
+        else:
+            self._last_update = datetime.now()
         return success
 
-    def _update(self, use_discovery=False):
-        """Avoid get cache value after control."""
-        time.sleep(0.5)
+    def _update(self, use_discovery):
 
-        if use_discovery:
+        """Avoid get cache value after control."""
+        difference = (datetime.now() - self._last_update).total_seconds()
+        wait_delay = difference < 0.5
+
+        data = None
+        if use_discovery or self._first_update:
+            if wait_delay:
+                time.sleep(0.5)
             # workaround for https://github.com/PaulAnnekov/tuyaha/issues/3
+            self._first_update = False
             devices = self.api.discovery()
             if not devices:
                 return
             for device in devices:
                 if device["id"] == self.obj_id:
-                    if not self.data:
-                        self.data = device["data"]
-                    else:
-                        self.data.update(device["data"])
-                    return True
-            return
+                    data = device["data"]
+                    break
 
-        success, response = self.api.device_control(
-            self.obj_id, "QueryDevice", namespace="query"
-        )
-        if success:
+        else:
+            # query can be called once every 60 seconds
+            difference = (datetime.now() - self._last_query).total_seconds()
+            if difference < QUERY_INTERVAL:
+                return
+            if difference == QUERY_INTERVAL:
+                wait_delay = True
+            if wait_delay:
+                time.sleep(0.5)
+            success, response = self.api.device_control(
+                self.obj_id, "QueryDevice", namespace="query"
+            )
+            self._last_query = datetime.now()
             # _LOGGER.info(response)
-            self.data = response["payload"]["data"]
+            if success:
+                data = response["payload"]["data"]
+
+        if data:
+            if not self.data:
+                self.data = data
+            else:
+                self.data.update(data)
             return True
+
         return
 
     def __repr__(self):
@@ -96,5 +123,5 @@ class TuyaDevice:
     def iconurl(self):
         return self.icon
 
-    def update(self):
-        return self._update()
+    def update(self, use_discovery=True):
+        return self._update(use_discovery)

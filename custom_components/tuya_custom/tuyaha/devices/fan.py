@@ -36,9 +36,6 @@ class TuyaFanDevice(TuyaDevice):
         if self._control_device("turnOnOff", {"value": "0"}):
             self._update_data("state", "false")
 
-    def update(self):
-        return self._update(use_discovery=True)
-
     def support_oscillate(self):
         if self.oscillating() is None:
             return False

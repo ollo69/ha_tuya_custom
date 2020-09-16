@@ -25,6 +25,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
+    CONF_MAX_COLOR_TEMP,
     CONF_COUNTRYCODE,
     CONF_CURR_TEMP_DIVIDER,
     CONF_EXT_TEMP_SENSOR,
@@ -75,6 +76,7 @@ TUYA_DEVICE_CONF_SCHEMA = {
                     vol.Optional(CONF_EXT_TEMP_SENSOR): cv.string,
                     vol.Optional(CONF_SUPPORT_COLOR): cv.boolean,
                     vol.Optional(CONF_BRIGHTNESS_RANGE_MODE, default=0): cv.positive_int,
+                    vol.Optional(CONF_MAX_COLOR_TEMP, default=0): cv.positive_int,
                 }
             )
         ],
@@ -263,6 +265,17 @@ class TuyaDevice(Entity):
         self._tuya_platform = platform
         self._dev_conf = None
 
+    """Static attribute"""
+    _device_count = 0
+
+    def _inc_device_count(self):
+        if self._tuya.device_type != "scene":
+            TuyaDevice._device_count += 1
+
+    def _dec_device_count(self):
+        if self._tuya.device_type != "scene" and TuyaDevice._device_count > 0:
+            TuyaDevice._device_count -= 1
+
     def _get_device_config(self):
         devices_config = self.hass.data[DOMAIN].get(TUYA_DEVICES_CONF)
         if devices_config:
@@ -284,6 +297,7 @@ class TuyaDevice(Entity):
         self.hass.data[DOMAIN]["entities"][dev_id] = self.entity_id
         async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
         async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
+        self._inc_device_count()
 
     @property
     def object_id(self):
@@ -328,11 +342,12 @@ class TuyaDevice(Entity):
 
     def update(self):
         """Refresh Tuya device data."""
-        self._tuya.update()
+        self._tuya.update(use_discovery=(TuyaDevice._device_count > 1))
 
     async def _delete_callback(self, dev_id):
         """Remove this entity."""
         if dev_id == self.object_id:
+            self._dec_device_count()
             entity_registry = (
                 await self.hass.helpers.entity_registry.async_get_registry()
             )

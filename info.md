@@ -1,4 +1,7 @@
 # Integration ha_tuya_custom
+
+**Important:** Due to dedicated Tuya API limitation, the refresh interval cannot be faster than 5 minutes
+(reduced to 1 minute if you have only 1 device). Do not open issue to ask faster refresh because it is not possible. 
  
 This custom component is the copy of the component implemented in Home Assistant but some modifications to the library
 used to communicate with Tuya Cloud have been implemented inside it.

@@ -17,6 +17,7 @@ from homeassistant.util import color as colorutil
 from . import TuyaDevice
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
+    CONF_MAX_COLOR_TEMP,
     CONF_SUPPORT_COLOR,
     DOMAIN,
     TUYA_DATA,
@@ -26,6 +27,7 @@ from .const import (
 # PARALLEL_UPDATES = 0
 TUYA_BRIGHTNESS_RANGE0 = (10, 1000)
 TUYA_BRIGHTNESS_RANGE1 = (1, 255)
+TUYA_DEF_MAX_COL_TEMP = 10000
 
 BRIGHTNESS_MODES = {
     0: TUYA_BRIGHTNESS_RANGE0,
@@ -89,6 +91,12 @@ class TuyaLight(TuyaDevice, LightEntity):
                 self._dev_conf.get(CONF_BRIGHTNESS_RANGE_MODE, 0),
                 TUYA_BRIGHTNESS_RANGE0
             )
+            # color temp range config
+            max_color_temp = max(
+                self._dev_conf.get(CONF_MAX_COLOR_TEMP, TUYA_DEF_MAX_COL_TEMP),
+                TUYA_DEF_MAX_COL_TEMP
+            )
+            self._tuya.color_temp_range = (1000, max_color_temp)
 
         return
 
