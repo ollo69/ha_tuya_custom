@@ -1,4 +1,6 @@
 """Support for the Tuya lights."""
+from datetime import timedelta
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -25,6 +27,8 @@ from .const import (
 )
 
 # PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
+
 TUYA_BRIGHTNESS_RANGE0 = (10, 1000)
 TUYA_BRIGHTNESS_RANGE1 = (1, 255)
 TUYA_DEF_MAX_COL_TEMP = 10000

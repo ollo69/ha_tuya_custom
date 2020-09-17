@@ -217,6 +217,11 @@ async def async_setup_entry(hass, entry):
 
     hass.services.async_register(DOMAIN, SERVICE_FORCE_UPDATE, async_force_update)
 
+    _LOGGER.info(
+        "Tuya platform initialized with discover poll interval set to %s seconds",
+        tuya.discovery_interval,
+    )
+
     return True
 
 
@@ -269,11 +274,16 @@ class TuyaDevice(Entity):
     _device_count = 0
 
     def _inc_device_count(self):
-        if self._tuya.device_type != "scene":
-            TuyaDevice._device_count += 1
+        dev_type = self._tuya.device_type()
+        if any(c in dev_type for c in ["scene", "switch"]):
+            return
+        TuyaDevice._device_count += 1
 
     def _dec_device_count(self):
-        if self._tuya.device_type != "scene" and TuyaDevice._device_count > 0:
+        dev_type = self._tuya.device_type()
+        if any(c in dev_type for c in ["scene", "switch"]):
+            return
+        if TuyaDevice._device_count > 0:
             TuyaDevice._device_count -= 1
 
     def _get_device_config(self):

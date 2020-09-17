@@ -1,5 +1,6 @@
 """Support for the Tuya climate devices."""
 import logging
+from datetime import timedelta
 from numbers import Number
 
 from homeassistant.components.climate import (
@@ -43,6 +44,7 @@ from .const import(
 DEVICE_TYPE = "climate"
 
 # PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 HA_STATE_TO_TUYA = {
     HVAC_MODE_HEAT_COOL: "auto",
