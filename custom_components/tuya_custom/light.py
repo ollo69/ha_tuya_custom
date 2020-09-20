@@ -19,7 +19,9 @@ from homeassistant.util import color as colorutil
 from . import TuyaDevice
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
-    CONF_MAX_COLOR_TEMP,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
+    CONF_MAX_TUYA_TEMP,
     CONF_SUPPORT_COLOR,
     DOMAIN,
     TUYA_DATA,
@@ -80,6 +82,8 @@ class TuyaLight(TuyaDevice, LightEntity):
         """Init Tuya light device."""
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+        self._min_kelvin = tuya.max_color_temp()
+        self._max_kelvin = tuya.min_color_temp()
 
     async def async_added_to_hass(self):
         """set config parameter when add to hass."""
@@ -95,9 +99,18 @@ class TuyaLight(TuyaDevice, LightEntity):
                 self._dev_conf.get(CONF_BRIGHTNESS_RANGE_MODE, 0),
                 TUYA_BRIGHTNESS_RANGE0
             )
-            # color temp range config
+
+            # color set temp range
+            min_tuya = self._tuya.max_color_temp()
+            min_kelvin = self._dev_conf.get(CONF_MIN_KELVIN, min_tuya)
+            max_tuya = self._tuya.min_color_temp()
+            max_kelvin = self._dev_conf.get(CONF_MAX_KELVIN, max_tuya)
+            self._min_kelvin = min(max(min_kelvin, min_tuya), max_tuya)
+            self._max_kelvin = min(max(max_kelvin, self._min_kelvin), max_tuya)
+
+            # color shown temp range
             max_color_temp = max(
-                self._dev_conf.get(CONF_MAX_COLOR_TEMP, TUYA_DEF_MAX_COL_TEMP),
+                self._dev_conf.get(CONF_MAX_TUYA_TEMP, TUYA_DEF_MAX_COL_TEMP),
                 TUYA_DEF_MAX_COL_TEMP
             )
             self._tuya.color_temp_range = (1000, max_color_temp)
@@ -132,12 +145,12 @@ class TuyaLight(TuyaDevice, LightEntity):
     @property
     def min_mireds(self):
         """Return color temperature min mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(self._tuya.min_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(self._max_kelvin)
 
     @property
     def max_mireds(self):
         """Return color temperature max mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(self._tuya.max_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(self._min_kelvin)
 
     def turn_on(self, **kwargs):
         """Turn on or control the light."""

@@ -25,13 +25,17 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
-    CONF_MAX_COLOR_TEMP,
+    CONF_DISCOVERY_INTERVAL,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
+    CONF_MAX_TUYA_TEMP,
     CONF_COUNTRYCODE,
     CONF_CURR_TEMP_DIVIDER,
     CONF_EXT_TEMP_SENSOR,
     CONF_DEVICE_NAME,
     CONF_SUPPORT_COLOR,
     CONF_TEMP_DIVIDER,
+    DEFAULT_DISCOVERY_INTERVAL,
     DOMAIN,
     TUYA_DATA,
     TUYA_DEVICES_CONF,
@@ -76,7 +80,9 @@ TUYA_DEVICE_CONF_SCHEMA = {
                     vol.Optional(CONF_EXT_TEMP_SENSOR): cv.string,
                     vol.Optional(CONF_SUPPORT_COLOR): cv.boolean,
                     vol.Optional(CONF_BRIGHTNESS_RANGE_MODE, default=0): cv.positive_int,
-                    vol.Optional(CONF_MAX_COLOR_TEMP, default=0): cv.positive_int,
+                    vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
+                    vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
+                    vol.Optional(CONF_MAX_TUYA_TEMP): cv.positive_int,
                 }
             )
         ],
@@ -98,6 +104,17 @@ CONFIG_SCHEMA = vol.Schema(
     ),
     extra=vol.ALLOW_EXTRA,
 )
+
+
+def _update_discovery_interval(hass, interval):
+    tuya = hass.data[DOMAIN].get(TUYA_DATA)
+    if not tuya:
+        return
+
+    tuya.discovery_interval = interval
+    _LOGGER.info(
+        "Tuya discovery poll interval set to %s seconds", interval
+    )
 
 
 async def async_setup(hass, config):
@@ -153,7 +170,17 @@ async def async_setup_entry(hass, entry):
         ENTRY_IS_SETUP: set(),
         "entities": {},
         "pending": {},
+        entry.entry_id:
+        {
+            "listener": [entry.add_update_listener(update_listener)],
+        }
     })
+
+    _update_discovery_interval(
+        hass, entry.options.get(
+            CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
+        )
+    )
 
     async def async_load_devices(device_list):
         """Load new devices by device_list."""
@@ -217,11 +244,6 @@ async def async_setup_entry(hass, entry):
 
     hass.services.async_register(DOMAIN, SERVICE_FORCE_UPDATE, async_force_update)
 
-    _LOGGER.info(
-        "Tuya platform initialized with discover poll interval set to %s seconds",
-        tuya.discovery_interval,
-    )
-
     return True
 
 
@@ -238,6 +260,9 @@ async def async_unload_entry(hass, entry):
         )
     )
     if unload_ok:
+        for listener in hass.data[DOMAIN][entry.entry_id]["listener"]:
+            listener()
+        hass.data[DOMAIN].pop(entry.entry_id)
         hass.data[DOMAIN][ENTRY_IS_SETUP] = set()
         hass.data[DOMAIN][TUYA_TRACKER]()
         hass.data[DOMAIN][TUYA_TRACKER] = None
@@ -248,6 +273,15 @@ async def async_unload_entry(hass, entry):
         hass.data.pop(DOMAIN)
 
     return unload_ok
+
+
+async def update_listener(hass, entry):
+    """Update when config_entry options update."""
+    _update_discovery_interval(
+        hass, entry.options.get(
+            CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
+        )
+    )
 
 
 async def cleanup_device_registry(hass, device_id):

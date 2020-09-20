@@ -57,8 +57,10 @@ tuya_custom:
       support_color: true # true or false, force color support for device
       brightness_range_mode: 0 # 0 = use brightness range 10-1000
                                # 1 = use brightness range 1-255
-      max_color_temp: 10000 # min val = 10000
-                            # define the maximum color temp reported by the light to ajust color temp slider 
+      min_kelvin: 2700 # min val = 2700 - define minumum kelvin temp accepted by the light
+      max_kelvin: 6500 # max val = 6500 - define maximum kelvin temp accepted by the light
+      max_tuya_temp: 10000 # min val = 10000 - define the maximum color temp reported by the light 
+                           # to ajust lovelace color temp slider range
 ```
 
 - For climate device:

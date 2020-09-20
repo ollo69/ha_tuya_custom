@@ -2,12 +2,17 @@
 
 CONF_COUNTRYCODE = "country_code"
 CONF_DEVICE_NAME = "device_name"
+CONF_DISCOVERY_INTERVAL = "discovery_interval"
 CONF_TEMP_DIVIDER = "temp_divider"
 CONF_CURR_TEMP_DIVIDER = "curr_temp_divider"
 CONF_EXT_TEMP_SENSOR = "ext_temp_sensor"
 CONF_SUPPORT_COLOR = "support_color"
 CONF_BRIGHTNESS_RANGE_MODE = "brightness_range_mode"
-CONF_MAX_COLOR_TEMP = "max_color_temp"
+CONF_MIN_KELVIN = "min_kelvin"
+CONF_MAX_KELVIN = "max_kelvin"
+CONF_MAX_TUYA_TEMP = "max_tuya_temp"
+
+DEFAULT_DISCOVERY_INTERVAL = 305.0
 
 DOMAIN = "tuya_custom"
 

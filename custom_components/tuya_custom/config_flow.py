@@ -5,10 +5,17 @@ from .tuyaha.tuyaapi import TuyaApi, TuyaAPIException, TuyaNetException, TuyaSer
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
 # pylint:disable=unused-import
-from .const import CONF_COUNTRYCODE, DOMAIN, TUYA_PLATFORMS
+from .const import(
+    CONF_COUNTRYCODE,
+    CONF_DISCOVERY_INTERVAL,
+    DEFAULT_DISCOVERY_INTERVAL,
+    DOMAIN,
+    TUYA_PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,3 +112,34 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for Tuya."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_DISCOVERY_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
+                    ),
+                ): vol.All(vol.Coerce(float), vol.Clamp(min=60, max=600)),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
