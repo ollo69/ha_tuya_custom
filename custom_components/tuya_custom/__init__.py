@@ -26,6 +26,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
     CONF_DISCOVERY_INTERVAL,
+    CONF_QUERY_INTERVAL,
     CONF_MAX_KELVIN,
     CONF_MIN_KELVIN,
     CONF_MAX_TUYA_TEMP,
@@ -36,6 +37,7 @@ from .const import (
     CONF_SUPPORT_COLOR,
     CONF_TEMP_DIVIDER,
     DEFAULT_DISCOVERY_INTERVAL,
+    DEFAULT_QUERY_INTERVAL,
     DOMAIN,
     TUYA_DATA,
     TUYA_DEVICES_CONF,
@@ -111,10 +113,27 @@ def _update_discovery_interval(hass, interval):
     if not tuya:
         return
 
-    tuya.discovery_interval = interval
-    _LOGGER.info(
-        "Tuya discovery poll interval set to %s seconds", interval
-    )
+    try:
+        tuya.discovery_interval = interval
+        _LOGGER.info(
+            "Tuya discovery device poll interval set to %s seconds", interval
+        )
+    except ValueError as ex:
+        _LOGGER.warning(ex)
+
+
+def _update_query_interval(hass, interval):
+    tuya = hass.data[DOMAIN].get(TUYA_DATA)
+    if not tuya:
+        return
+
+    try:
+        tuya.query_interval = interval
+        _LOGGER.info(
+            "Tuya query device poll interval set to %s seconds", interval
+        )
+    except ValueError as ex:
+        _LOGGER.warning(ex)
 
 
 async def async_setup(hass, config):
@@ -179,6 +198,12 @@ async def async_setup_entry(hass, entry):
     _update_discovery_interval(
         hass, entry.options.get(
             CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
+        )
+    )
+
+    _update_query_interval(
+        hass, entry.options.get(
+            CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
         )
     )
 
@@ -280,6 +305,11 @@ async def update_listener(hass, entry):
     _update_discovery_interval(
         hass, entry.options.get(
             CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
+        )
+    )
+    _update_query_interval(
+        hass, entry.options.get(
+            CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
         )
     )
 

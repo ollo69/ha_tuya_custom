@@ -3,6 +3,7 @@
 CONF_COUNTRYCODE = "country_code"
 CONF_DEVICE_NAME = "device_name"
 CONF_DISCOVERY_INTERVAL = "discovery_interval"
+CONF_QUERY_INTERVAL = "query_interval"
 CONF_TEMP_DIVIDER = "temp_divider"
 CONF_CURR_TEMP_DIVIDER = "curr_temp_divider"
 CONF_EXT_TEMP_SENSOR = "ext_temp_sensor"
@@ -13,6 +14,7 @@ CONF_MAX_KELVIN = "max_kelvin"
 CONF_MAX_TUYA_TEMP = "max_tuya_temp"
 
 DEFAULT_DISCOVERY_INTERVAL = 305.0
+DEFAULT_QUERY_INTERVAL = 60.0
 
 DOMAIN = "tuya_custom"
 

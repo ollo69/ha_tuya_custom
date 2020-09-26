@@ -26,7 +26,8 @@
         "step": {
             "init": {
                 "data": {
-                    "discovery_interval": "Device discovery polling interval in seconds (60-600)"
+                    "discovery_interval": "Discovery device method polling interval (in seconds, 10-3600)",
+                    "query_interval": "Query device method polling interval (in seconds, 10-3600)"
                 }
             }
         }

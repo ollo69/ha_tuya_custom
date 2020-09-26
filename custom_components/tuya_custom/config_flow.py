@@ -12,7 +12,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from .const import(
     CONF_COUNTRYCODE,
     CONF_DISCOVERY_INTERVAL,
+    CONF_QUERY_INTERVAL,
     DEFAULT_DISCOVERY_INTERVAL,
+    DEFAULT_QUERY_INTERVAL,
     DOMAIN,
     TUYA_PLATFORMS,
 )
@@ -139,7 +141,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(float), vol.Clamp(min=60, max=600)),
+                ): vol.All(vol.Coerce(float), vol.Clamp(min=10, max=3600)),
+                vol.Optional(
+                    CONF_QUERY_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
+                    ),
+                ): vol.All(vol.Coerce(float), vol.Clamp(min=10, max=3600)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

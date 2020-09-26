@@ -12,10 +12,10 @@ from .devices.factory import get_tuya_device
 TUYACLOUDURL = "https://px1.tuya{}.com"
 DEFAULTREGION = "us"
 
-MIN_DISCOVERY_INTERVAL = 60.0
-DEF_DISCOVERY_INTERVAL = 305.0
+MIN_DISCOVERY_INTERVAL = 10.0
+DEF_DISCOVERY_INTERVAL = 60.0
 MIN_QUERY_INTERVAL = 10.0
-DEF_QUERY_INTERVAL = 60.0
+DEF_QUERY_INTERVAL = 30.0
 REFRESHTIME = 60 * 60 * 12
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,27 +46,33 @@ class TuyaApi:
         self._discovered_devices = None
         self._last_discover = None
         self._force_discovery = False
-        self._discovery_interval = 0.0
-        self._query_interval = 0.0
+        self._discovery_interval = DEF_DISCOVERY_INTERVAL
+        self._query_interval = DEF_QUERY_INTERVAL
         self._discovery_fail_count = 0
 
     @property
     def discovery_interval(self):
-        return self._discovery_interval or DEF_DISCOVERY_INTERVAL
+        return self._discovery_interval
 
     @discovery_interval.setter
     def discovery_interval(self, val):
-        if val >= MIN_DISCOVERY_INTERVAL:
-            self._discovery_interval = val
+        if val < MIN_DISCOVERY_INTERVAL:
+            raise ValueError(
+                f"Discovery interval below {MIN_DISCOVERY_INTERVAL} seconds is invalid"
+            )
+        self._discovery_interval = val
 
     @property
     def query_interval(self):
-        return self._query_interval or DEF_QUERY_INTERVAL
+        return self._query_interval
 
     @query_interval.setter
     def query_interval(self, val):
-        if val >= MIN_QUERY_INTERVAL:
-            self._query_interval = val
+        if val < MIN_QUERY_INTERVAL:
+            raise ValueError(
+                f"Query interval below {MIN_QUERY_INTERVAL} seconds is invalid"
+            )
+        self._query_interval = val
 
     def log_message(self, message, *args):
         if self._log_level_warn:
