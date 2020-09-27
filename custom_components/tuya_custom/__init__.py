@@ -3,7 +3,14 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from .tuyaha.tuyaapi import TuyaApi, TuyaAPIException, TuyaNetException, TuyaServerException
+from .tuyaha.tuyaapi import (
+    TuyaApi,
+    TuyaAPIException,
+    TuyaNetException,
+    TuyaServerException,
+    TuyaFrequentlyInvokeException,
+)
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -174,7 +181,7 @@ async def async_setup_entry(hass, entry):
         await hass.async_add_executor_job(
             tuya.init, username, password, country_code, platform
         )
-    except (TuyaNetException, TuyaServerException):
+    except (TuyaNetException, TuyaServerException, TuyaFrequentlyInvokeException):
         raise ConfigEntryNotReady()
 
     except TuyaAPIException as exc:
@@ -233,11 +240,13 @@ async def async_setup_entry(hass, entry):
             else:
                 async_dispatcher_send(hass, TUYA_DISCOVERY_NEW.format(ha_type), dev_ids)
 
-    device_list = await hass.async_add_executor_job(tuya.get_all_devices)
-    await async_load_devices(device_list)
+    await async_load_devices(tuya.get_all_devices())
 
     def _get_updated_devices():
-        tuya.poll_devices_update()
+        try:
+            tuya.poll_devices_update()
+        except TuyaFrequentlyInvokeException as ex:
+            _LOGGER.warning(ex)
         return tuya.get_all_devices()
 
     async def async_poll_devices_update(event_time):
@@ -416,7 +425,10 @@ class TuyaDevice(Entity):
 
     def update(self):
         """Refresh Tuya device data."""
-        self._tuya.update(use_discovery=(TuyaDevice._device_count > 1))
+        try:
+            self._tuya.update(use_discovery=(TuyaDevice._device_count > 1))
+        except TuyaFrequentlyInvokeException as ex:
+            _LOGGER.warning(ex)
 
     async def _delete_callback(self, dev_id):
         """Remove this entity."""
