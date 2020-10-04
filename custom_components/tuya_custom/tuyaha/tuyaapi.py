@@ -12,10 +12,18 @@ from .devices.factory import get_tuya_device
 TUYACLOUDURL = "https://px1.tuya{}.com"
 DEFAULTREGION = "us"
 
-MIN_DISCOVERY_INTERVAL = 10.0
-DEF_DISCOVERY_INTERVAL = 60.0
-MIN_QUERY_INTERVAL = 10.0
-DEF_QUERY_INTERVAL = 30.0
+# Tuya API do not allow call to discovery command below specific limits
+# Use discovery_interval property to set correct value based on API discovery limits
+# Next 2 parameter define the default and minimum allowed value for the property
+MIN_DISCOVERY_INTERVAL = 10.0  # 10 seconds
+DEF_DISCOVERY_INTERVAL = 60.0  # 60 seconds
+
+# Tuya API do not allow call to query command below specific limits
+# Use query_interval property to set correct value based on API query limits
+# Next 2 parameter define the default and minimum allowed value for the property
+MIN_QUERY_INTERVAL = 10.0  # 10 seconds
+DEF_QUERY_INTERVAL = 30.0  # 30 seconds
+
 REFRESHTIME = 60 * 60 * 12
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +59,7 @@ class TuyaApi:
 
     @property
     def discovery_interval(self):
+        """The interval in seconds between 2 consecutive device discovery"""
         return self._discovery_interval
 
     @discovery_interval.setter
@@ -63,6 +72,7 @@ class TuyaApi:
 
     @property
     def query_interval(self):
+        """The interval in seconds between 2 consecutive device query"""
         return self._query_interval
 
     @query_interval.setter
@@ -169,6 +179,8 @@ class TuyaApi:
             return True
         return False
 
+    # if discovery is called before that configured polling interval has passed
+    # it return cached data retrieved by previous successful call
     def discovery(self):
         with lock:
             if self._call_discovery():
