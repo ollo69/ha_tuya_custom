@@ -16,6 +16,35 @@ class TuyaDevice:
         self._last_update = datetime.min
         self._last_query = datetime.min
 
+    def name(self):
+        return self.obj_name
+
+    def state(self):
+        state = self.data.get("state")
+        if state is None:
+            return None
+        elif isinstance(state, str):
+            if state == "true":
+                return True
+            return False
+        else:
+            return bool(state)
+
+    def device_type(self):
+        return self.dev_type
+
+    def object_id(self):
+        return self.obj_id
+
+    def object_type(self):
+        return self.obj_type
+
+    def available(self):
+        return self.data.get("online")
+
+    def iconurl(self):
+        return self.icon
+
     def _update_data(self, key, value, force_val=False):
         if self.data:
             # device properties not provided by Tuya API are saved in the
@@ -100,35 +129,6 @@ class TuyaDevice:
             name=self.obj_name,
             obj_id=self.obj_id
         )
-
-    def name(self):
-        return self.obj_name
-
-    def state(self):
-        state = self.data.get("state")
-        if state is None:
-            return None
-        elif isinstance(state, str):
-            if state == "true":
-                return True
-            return False
-        else:
-            return bool(state)
-
-    def device_type(self):
-        return self.dev_type
-
-    def object_id(self):
-        return self.obj_id
-
-    def object_type(self):
-        return self.obj_type
-
-    def available(self):
-        return self.data.get("online")
-
-    def iconurl(self):
-        return self.icon
 
     def update(self, use_discovery=True):
         return self._update(use_discovery)

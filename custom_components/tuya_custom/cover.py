@@ -15,7 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import TuyaDevice
 from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
-# PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
@@ -29,7 +28,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(
-            _setup_entities, hass, dev_ids, platform,
+            _setup_entities,
+            hass,
+            dev_ids,
+            platform,
         )
         async_add_entities(entities)
 
@@ -66,10 +68,9 @@ class TuyaCover(TuyaDevice, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         if self._tuya.support_stop():
-            supported_features |= SUPPORT_STOP
-        return supported_features
+            return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
     def is_opening(self):
@@ -99,10 +100,6 @@ class TuyaCover(TuyaDevice, CoverEntity):
             return True
         if state != 1 and self._was_opening:
             return False
-        # if state == 1:
-        #     return False
-        # if state == 2:
-        #     return True
         return None
 
     def open_cover(self, **kwargs):

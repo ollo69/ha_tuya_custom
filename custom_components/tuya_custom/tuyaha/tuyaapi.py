@@ -15,14 +15,14 @@ DEFAULTREGION = "us"
 # Tuya API do not allow call to discovery command below specific limits
 # Use discovery_interval property to set correct value based on API discovery limits
 # Next 2 parameter define the default and minimum allowed value for the property
-MIN_DISCOVERY_INTERVAL = 10.0  # 10 seconds
-DEF_DISCOVERY_INTERVAL = 60.0  # 60 seconds
+MIN_DISCOVERY_INTERVAL = 10.0
+DEF_DISCOVERY_INTERVAL = 60.0
 
 # Tuya API do not allow call to query command below specific limits
 # Use query_interval property to set correct value based on API query limits
 # Next 2 parameter define the default and minimum allowed value for the property
-MIN_QUERY_INTERVAL = 10.0  # 10 seconds
-DEF_QUERY_INTERVAL = 30.0  # 30 seconds
+MIN_QUERY_INTERVAL = 10.0
+DEF_QUERY_INTERVAL = 30.0
 
 REFRESHTIME = 60 * 60 * 12
 
@@ -122,6 +122,8 @@ class TuyaApi:
             message = response_json.get("errorMsg")
             if message == "error":
                 raise TuyaAPIException("get access token failed")
+            elif message == "you cannot auth exceed once in 60 seconds":
+                raise TuyaAPIRateLimitException("login rate limited")
             else:
                 raise TuyaAPIException(message)
 
@@ -246,7 +248,7 @@ class TuyaApi:
                 (TUYACLOUDURL + "/homeassistant/skill").format(SESSION.region), json=data
             )
         except RequestsConnectionError as ex:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "request error, error code is %s, device %s",
                 ex,
                 devId,
@@ -260,9 +262,7 @@ class TuyaApi:
                 devId,
             )
             return
-
         response_json = response.json()
-        _LOGGER.debug("Tuya request response: %s", response_json)
         result_code = response_json["header"]["code"]
         if result_code != "SUCCESS":
             if result_code == "FrequentlyInvoke":
@@ -270,7 +270,7 @@ class TuyaApi:
                     name, response_json["header"].get("msg", result_code), devId
                 )
             else:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "control device error, error code is " + response_json["header"]["code"]
                 )
         return response_json
@@ -307,4 +307,8 @@ class TuyaServerException(Exception):
 
 
 class TuyaFrequentlyInvokeException(Exception):
+    pass
+
+
+class TuyaAPIRateLimitException(Exception):
     pass

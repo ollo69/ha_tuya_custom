@@ -37,42 +37,59 @@ After a correct installation, your configuration directory should look like the 
 
     **Note**: if the custom_components directory does not exist, you need to create it.
     
-### Component setup    
+## Component setup    
 
 For the configuration use exactly the same options used to configure the standard Tuya component, however choosing the Tuya Custom component from the list of additions.
 
 **N.B. Before configuring this integration, remove the standard Tuya integration.**
 
-### Device parameters (configuration.yaml)
+## Integration Options (From UI integration page)
 
-To provide device information that in some case are not correctly provided by the cloud, you can use 
-configuration.yaml file. Following example of supported values:
+It is possible to change various behaviors through the integration options, some common for integration and others specific to each `light` and `climate` devices. These can be changed at **Tuya** -> **Options** on the Integrations page.
 
-- For light device:
+### Common Options
 
-```
-tuya_custom:
-  devices_config:
-    - device_name: <Friendly Name of your device in HA> # this is mandatory with at least one of the other keys
-      support_color: true # true or false, force color support for device
-      brightness_range_mode: 0 # 0 = use brightness range 10-1000
-                               # 1 = use brightness range 1-255
-      min_kelvin: 2700 # min val = 2700 - define minumum kelvin temp accepted by the light
-      max_kelvin: 6500 # max val = 6500 - define maximum kelvin temp accepted by the light
-      max_tuya_temp: 10000 # min val = 10000 - define the maximum color temp reported by the light 
-                           # to ajust lovelace color temp slider range
-```
+- **Discovery device polling interval** (default=605): define the interval between 2 consecutive calls to the `API discovery method`, which is used to get the status for all registered devices with a single call. If you set interval value too low, Tuya API will return errors, so it is suggested to use the default value until
+you know that it is possible to use lower values.
 
-- For climate device:
+- **Query device polling interval** (default=120): this option is available only if you have devices that can use the `API query method`. 
+It defines the interval between 2 consecutive calls to the `API query method`, that is used to get the status for a specific device. 
+This method is always used when it is available only one device that can use it. If you set interval value too low, Tuya API will return errors 
+so it is suggested to use the default value until you know that is possible to use lower values.
 
-```
-tuya_custom:
-  devices_config:
-    - device_name: <Friendly Name of your device in HA> # this is mandatory with at least one of the other keys
-      unit_of_measurement: "C" # "F" or "C", not set to use value provided from cloud
-      temp_divider: 1 # any positive number, all temperature values will be divided by this value
-      curr_temp_divider: 1  # any positive number, only current temperature values will be divided by this value
-      ext_temp_sensor: sensor.temp # a sensor that provide ambient temp used when not provided by device
-```
+- **Device that will use the query method**: this option is available only if you have devices that can use the `API query method`. 
+Because it is not possible to make multiple calls to the `API query method`. If you have more than one device that can use it you can choose which one will use. This will give a better status refresh for this specific device.
 
-You can set configuration for multiple devices, adding one list that start with `- device_name:` for every device
+- **Device to configure (multi-select list)**: this option is available only if you have a `light` or `climate` device. Selecting a device to 
+configure to options page related to the device will be opened. You can also select more than one devices to configure them simultaneously, 
+but all selected devices must be of the same type.
+
+### Light Options
+
+- **Force color support**: when checked force `color support` for devices that do not report this feature.
+
+- **Brightness range**: change the `brightness range` used for the device. Possible options are:
+    - range 1-255 (default)
+    - range 10-1000
+
+- **Min color temperature**: set minimum `color temperature` expressed in `kelvin` accepted by the light.
+
+- **Max color temperature**: set maximum `color temperature` expressed in `kelvin` accepted by the light.
+
+- **Max color temperature reported**: set the maximum `color temperature` value reported by the light.
+
+### Climate Options
+
+- **Temperature unit**: change the `temperature unit` used internally by the devices.
+
+- **Temperature values divider**: `all temperatures` reported by device will be divided by this value.
+
+- **Current Temperature value divider**: `current temperature` reported by device will be divided by this value.
+
+- **Min target temperature**: set the minimum allowed `target temperature` for the entity.
+
+- **Max target temperature**: set the maximum allowed `target temperature` for the entity.
+
+## Device parameters (configuration.yaml)
+
+Configuration of device parameter using `configuration.yaml` is not supported anymore. Use integration options for this.

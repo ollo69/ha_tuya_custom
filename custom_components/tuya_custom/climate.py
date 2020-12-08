@@ -1,7 +1,6 @@
 """Support for the Tuya climate devices."""
-import logging
 from datetime import timedelta
-from numbers import Number
+import logging
 
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
@@ -12,10 +11,10 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -29,25 +28,27 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import TuyaDevice
-from .const import(
-    CONF_TEMP_DIVIDER,
+from .const import (
     CONF_CURR_TEMP_DIVIDER,
-    CONF_EXT_TEMP_SENSOR,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_TEMP_DIVIDER,
     DOMAIN,
+    SIGNAL_CONFIG_ENTITY,
     TUYA_DATA,
     TUYA_DISCOVERY_NEW,
 )
 
 DEVICE_TYPE = "climate"
 
-# PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 HA_STATE_TO_TUYA = {
-    HVAC_MODE_HEAT_COOL: "auto",
+    HVAC_MODE_AUTO: "auto",
     HVAC_MODE_COOL: "cold",
     HVAC_MODE_FAN_ONLY: "wind",
     HVAC_MODE_HEAT: "hot",
@@ -70,7 +71,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(
-            _setup_entities, hass, dev_ids, platform,
+            _setup_entities,
+            hass,
+            dev_ids,
+            platform,
         )
         async_add_entities(entities)
 
@@ -103,27 +107,38 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
         self.operations = [HVAC_MODE_OFF]
         self._has_operation = False
-        self._temp_entity = None
-        self._temp_entity_error = False
-        self._def_hvac_mode = HVAC_MODE_HEAT_COOL
+        self._def_hvac_mode = HVAC_MODE_AUTO
+        self._min_temp = None
+        self._max_temp = None
+
+    @callback
+    def _process_config(self):
+        """Set device config parameter."""
+        config = self._get_device_config()
+        if not config:
+            return
+        unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+        if unit:
+            self._tuya.set_unit("FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS")
+        self._tuya.temp_divider = config.get(CONF_TEMP_DIVIDER, 0)
+        self._tuya.curr_temp_divider = config.get(CONF_CURR_TEMP_DIVIDER, 0)
+        min_temp = config.get(CONF_MIN_TEMP, 0)
+        max_temp = config.get(CONF_MAX_TEMP, 0)
+        if min_temp >= max_temp:
+            self._min_temp = self._max_temp = None
+        else:
+            self._min_temp = min_temp
+            self._max_temp = max_temp
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
-
-        if self._dev_conf:
-            unit = self._dev_conf.get(CONF_UNIT_OF_MEASUREMENT)
-            if unit:
-                self._tuya.set_unit(
-                    "FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS"
-                )
-            self._tuya.temp_divider = (
-                self._dev_conf.get(CONF_TEMP_DIVIDER, 0)
+        self._process_config()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_CONFIG_ENTITY, self._process_config
             )
-            self._tuya.curr_temp_divider = (
-                self._dev_conf.get(CONF_CURR_TEMP_DIVIDER, 0)
-            )
-            self._temp_entity = self._dev_conf.get(CONF_EXT_TEMP_SENSOR)
+        )
 
         modes = self._tuya.operation_list()
         if modes is None:
@@ -132,11 +147,12 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             return
 
         for mode in modes:
-            if mode in TUYA_STATE_TO_HA:
-                ha_mode = TUYA_STATE_TO_HA[mode]
-                if ha_mode not in self.operations:
-                    self.operations.append(ha_mode)
-                self._has_operation = True
+            if mode not in TUYA_STATE_TO_HA:
+                continue
+            ha_mode = TUYA_STATE_TO_HA[mode]
+            if ha_mode not in self.operations:
+                self.operations.append(ha_mode)
+            self._has_operation = True
 
     @property
     def precision(self):
@@ -175,10 +191,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        curr_temp = self._tuya.current_temperature()
-        if curr_temp is None:
-            return self._get_ext_temperature()
-        return curr_temp
+        return self._tuya.current_temperature()
 
     @property
     def target_temperature(self):
@@ -234,64 +247,19 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        min_temp = self._tuya.min_temp()
+        min_temp = (
+            self._min_temp if self._min_temp is not None else self._tuya.min_temp()
+        )
         if min_temp is not None:
-            if self._tuya.has_decimal():
-                return min_temp
-            if min_temp != 0:
-                return min_temp
-        return super(TuyaClimateEntity, self).min_temp
+            return min_temp
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        max_temp = self._tuya.max_temp()
+        max_temp = (
+            self._max_temp if self._max_temp is not None else self._tuya.max_temp()
+        )
         if max_temp is not None:
-            if self._tuya.has_decimal():
-                return max_temp
-            if max_temp != 100:
-                return max_temp
-        return super(TuyaClimateEntity, self).max_temp
-
-    def _get_ext_temperature(self):
-        if not self._temp_entity:
-            return None
-
-        def _log_error(error_msg):
-            if not self._temp_entity_error:
-                _LOGGER.warning(
-                    "Error on Tuya external temperature sensor %s: %s",
-                    self._temp_entity,
-                    error_msg,
-                )
-                self._temp_entity_error = True
-
-        try:
-            attr_list = self._temp_entity.split(".", 2)
-            if len(attr_list) < 2:
-                _log_error("entity name is invalid")
-                return None
-            entity_name = f"{attr_list[0]}.{attr_list[1]}"
-            entity_attr = None
-            if len(attr_list) > 2:
-                entity_attr = attr_list[2]
-
-            state_obj = self.hass.states.get(entity_name)
-            if state_obj:
-                if entity_attr:
-                    temp = state_obj.attributes.get(entity_attr)
-                else:
-                    temp = state_obj.state
-                if temp is None or not isinstance(temp, Number):
-                    msg = f"attribute {entity_attr}" if entity_attr else "state"
-                    _log_error(f"entity {msg} is not available or is not a number")
-                    return None
-
-                self._temp_entity_error = False
-                return temp
-            else:
-                _log_error("entity not found")
-
-            return None
-        except (TypeError, ValueError):
-            return None
+            return max_temp
+        return super().max_temp
