@@ -45,7 +45,7 @@ For the configuration use exactly the same options used to configure the standar
 
 ## Integration Options (From UI integration page)
 
-It is possible to change various behaviors through the integration options, some common for integration and others specific to each `light` and `climate` devices. These can be changed at **Tuya** -> **Options** on the Integrations page.
+It is possible to change various behaviors through the integration options, some common for integration and others specific to each `light` and `climate` devices. These can be changed at **Tuya Custom** -> **Options** on the Integrations page.
 
 ### Common Options
 
@@ -90,6 +90,9 @@ but all selected devices must be of the same type.
 
 - **Max target temperature**: set the maximum allowed `target temperature` for the entity.
 
+- **Sensor for current temperature**: any HA sensor entity that provide `current temperature`, used when not available from device.
+
 ## Device parameters (configuration.yaml)
 
 Configuration of device parameter using `configuration.yaml` is not supported anymore. Use integration options for this.
+Please note that option previously set in configuration file will not be loaded anymore and must be configured again from integration page.
