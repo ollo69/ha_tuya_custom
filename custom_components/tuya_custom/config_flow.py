@@ -382,11 +382,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.In({TEMP_CELSIUS: "Celsius", TEMP_FAHRENHEIT: "Fahrenheit"}),
                 vol.Optional(
                     CONF_TEMP_DIVIDER, default=curr_conf.get(CONF_TEMP_DIVIDER, 0),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
+                ): vol.All(vol.Coerce(float), vol.Clamp(min=0)),
                 vol.Optional(
                     CONF_CURR_TEMP_DIVIDER,
                     default=curr_conf.get(CONF_CURR_TEMP_DIVIDER, 0),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
+                ): vol.All(vol.Coerce(float), vol.Clamp(min=0)),
                 vol.Optional(
                     CONF_SET_TEMP_DIVIDED,
                     default=curr_conf.get(CONF_SET_TEMP_DIVIDED, False),

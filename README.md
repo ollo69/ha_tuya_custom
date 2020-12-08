@@ -86,7 +86,7 @@ but all selected devices must be of the same type.
 
 - **Current Temperature value divider**: `current temperature` reported by device will be divided by this value.
 
-- **Set Temperature value divided**: when checked use temperature value previously divided in set command.
+- **Set Temperature value divided**: when checked use the temperature value previously divided in `set command`.
 
 - **Min target temperature**: set the minimum allowed `target temperature` for the entity.
 

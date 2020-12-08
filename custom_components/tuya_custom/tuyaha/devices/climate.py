@@ -57,7 +57,8 @@ class TuyaClimate(TuyaDevice):
         # this check is to avoid that divider is reset from
         # calculated value when is set to 0
         if (self._divider_set and divider == 0) or divider > 0:
-            self._divider = divider
+            digits = 2 if divider and divider < 1 else 0
+            self._divider = round(divider, digits)
         self._divider_set = divider > 0
 
     @property
@@ -70,7 +71,8 @@ class TuyaClimate(TuyaDevice):
            If not defined standard temperature divider is used"""
         if divider < 0:
             raise ValueError("Current temperature divider must be a positive value")
-        self._ct_divider = divider
+        digits = 2 if divider and divider < 1 else 0
+        self._ct_divider = round(divider, digits)
 
     def has_decimal(self):
         """Return if temperature values support decimal"""
@@ -155,15 +157,14 @@ class TuyaClimate(TuyaDevice):
 
         # the value used to set temperature is scaled based on the configured divider
         divider = self._divider or 1
+        digits = 1 if divider < 1 else 0
 
         if use_divider:
-            if self.has_decimal():
-                temp_val = round(float(temperature), 1)
-            else:
-                temp_val = round(float(temperature))
-            set_val = round(temp_val * divider)
+            temp_val = round(float(temperature), 1 if self.has_decimal() else 0)
+            set_val = round(temp_val * divider, digits)
         else:
-            temp_val = set_val = round(float(temperature) * divider)
+            temp_val = set_val = round(float(temperature) * divider, digits)
+
         if self._control_device("temperatureSet", {"value": temp_val}):
             self._update_data("temperature", set_val)
 
