@@ -37,6 +37,7 @@ from .const import (
     CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     CONF_SUPPORT_COLOR,
+    CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
     CONF_TUYA_MAX_COLTEMP,
     DEFAULT_DISCOVERY_INTERVAL,
@@ -386,6 +387,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CURR_TEMP_DIVIDER,
                     default=curr_conf.get(CONF_CURR_TEMP_DIVIDER, 0),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
+                vol.Optional(
+                    CONF_SET_TEMP_DIVIDED,
+                    default=curr_conf.get(CONF_SET_TEMP_DIVIDED, False),
+                ): bool,
                 vol.Optional(
                     CONF_MIN_TEMP, default=curr_conf.get(CONF_MIN_TEMP, 0),
                 ): int,

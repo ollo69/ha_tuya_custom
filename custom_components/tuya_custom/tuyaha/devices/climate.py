@@ -150,15 +150,18 @@ class TuyaClimate(TuyaDevice):
     def max_humidity(self):
         pass
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, temperature, use_divider=False):
         """Set new target temperature."""
 
         # the value used to set temperature is scaled based on the configured divider
         divider = self._divider or 1
 
-        if not self.has_decimal():
-            temp_val = round(float(temperature))
-            set_val = temp_val * divider
+        if use_divider:
+            if self.has_decimal():
+                temp_val = round(float(temperature), 1)
+            else:
+                temp_val = round(float(temperature))
+            set_val = round(temp_val * divider)
         else:
             temp_val = set_val = round(float(temperature) * divider)
         if self._control_device("temperatureSet", {"value": temp_val}):

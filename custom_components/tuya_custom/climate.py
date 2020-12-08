@@ -38,6 +38,7 @@ from .const import (
     CONF_EXT_TEMP_SENSOR,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
     DOMAIN,
     SIGNAL_CONFIG_ENTITY,
@@ -112,6 +113,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._def_hvac_mode = HVAC_MODE_AUTO
         self._min_temp = None
         self._max_temp = None
+        self._set_temp_divided = False
         self._temp_entity = None
         self._temp_entity_error = False
 
@@ -126,6 +128,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             self._tuya.set_unit("FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS")
         self._tuya.temp_divider = config.get(CONF_TEMP_DIVIDER, 0)
         self._tuya.curr_temp_divider = config.get(CONF_CURR_TEMP_DIVIDER, 0)
+        self._set_temp_divided = config.get(CONF_SET_TEMP_DIVIDED, False)
         min_temp = config.get(CONF_MIN_TEMP, 0)
         max_temp = config.get(CONF_MAX_TEMP, 0)
         if min_temp >= max_temp:
@@ -224,7 +227,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE])
+            self._tuya.set_temperature(
+                kwargs[ATTR_TEMPERATURE], self._set_temp_divided
+            )
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
