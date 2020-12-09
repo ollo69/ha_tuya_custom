@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     ENTITY_MATCH_NONE,
-    PRECISION_TENTHS,
+    PRECISION_HALVES,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -38,9 +38,11 @@ from .const import (
     CONF_EXT_TEMP_SENSOR,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_PRECISION_OVERRIDE,
     CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
     DOMAIN,
+    PRECISION_DEFAULT,
     SIGNAL_CONFIG_ENTITY,
     TUYA_DATA,
     TUYA_DISCOVERY_NEW,
@@ -114,6 +116,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._min_temp = None
         self._max_temp = None
         self._set_temp_divided = False
+        self._precision_override = PRECISION_DEFAULT
         self._temp_entity = None
         self._temp_entity_error = False
 
@@ -129,6 +132,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._tuya.temp_divider = config.get(CONF_TEMP_DIVIDER, 0)
         self._tuya.curr_temp_divider = config.get(CONF_CURR_TEMP_DIVIDER, 0)
         self._set_temp_divided = config.get(CONF_SET_TEMP_DIVIDED, False)
+        self._precision_override = config.get(
+            CONF_PRECISION_OVERRIDE, PRECISION_DEFAULT
+        )
         min_temp = config.get(CONF_MIN_TEMP, 0)
         max_temp = config.get(CONF_MAX_TEMP, 0)
         if min_temp >= max_temp:
@@ -165,8 +171,10 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        if self._precision_override != PRECISION_DEFAULT:
+            return self._precision_override
         if self._tuya.has_decimal():
-            return PRECISION_TENTHS
+            return PRECISION_HALVES
         return PRECISION_WHOLE
 
     @property
@@ -212,7 +220,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self._tuya.target_temperature_step()
+        return self.precision
 
     @property
     def fan_mode(self):

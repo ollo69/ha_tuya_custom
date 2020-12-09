@@ -9,6 +9,7 @@ CONF_MAX_KELVIN = "max_kelvin"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_KELVIN = "min_kelvin"
 CONF_MIN_TEMP = "min_temp"
+CONF_PRECISION_OVERRIDE = "precision_override"
 CONF_QUERY_DEVICE = "query_device"
 CONF_QUERY_INTERVAL = "query_interval"
 CONF_SET_TEMP_DIVIDED = "set_temp_divided"
@@ -21,6 +22,8 @@ DEFAULT_QUERY_INTERVAL = 120
 DEFAULT_TUYA_MAX_COLTEMP = 10000
 
 DOMAIN = "tuya_custom"
+
+PRECISION_DEFAULT = -1
 
 SIGNAL_CONFIG_ENTITY = "tuya_config"
 SIGNAL_DELETE_ENTITY = "tuya_delete"

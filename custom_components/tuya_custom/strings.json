@@ -46,7 +46,8 @@
           "unit_of_measurement": "Temperature unit used by device",
           "temp_divider": "Temperature values divider (0 = use default)",
           "curr_temp_divider": "Current Temperature value divider (0 = use default)",
-          "set_temp_divided": "Use Temperature value previously divided in set command",
+          "set_temp_divided": "Use divided Temperature value for set temperature command",
+          "precision_override": "Temperature precision",
           "min_temp": "Min target temperature (use min and max = 0 for default)",
           "max_temp": "Max target temperature (use min and max = 0 for default)",
           "ext_temp_sensor": "Sensor for current temperature"
