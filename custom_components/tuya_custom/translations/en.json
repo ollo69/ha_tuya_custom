@@ -44,6 +44,7 @@
                     "temp_divider": "Temperature values divider (0 = use default)",
                     "set_temp_divided": "Use divided Temperature value for set temperature command",
                     "precision_override": "Temperature precision",
+                    "temp_step_override": "Target Temperature step",
                     "tuya_max_coltemp": "Max color temperature reported by device",
                     "unit_of_measurement": "Temperature unit used by device",
                     "ext_temp_sensor": "Sensor for current temperature"

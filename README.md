@@ -88,7 +88,9 @@ but all selected devices must be of the same type.
 
 - **Set Temperature value divided**: when checked use the divided temperature value for `set temperature` command.
 
-- **Temperature precision**: set the type of precision used by the device.
+- **Temperature precision**: set the type of temperature precision provided by the device.
+
+- **Target Temperature step**: set the temperature step used to set target temperature.
 
 - **Min target temperature**: set the minimum allowed `target temperature` for the entity.
 

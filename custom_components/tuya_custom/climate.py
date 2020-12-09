@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     ENTITY_MATCH_NONE,
-    PRECISION_HALVES,
+    PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -41,6 +41,7 @@ from .const import (
     CONF_PRECISION_OVERRIDE,
     CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
+    CONF_TEMP_STEP_OVERRIDE,
     DOMAIN,
     PRECISION_DEFAULT,
     SIGNAL_CONFIG_ENTITY,
@@ -117,6 +118,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._max_temp = None
         self._set_temp_divided = False
         self._precision_override = PRECISION_DEFAULT
+        self._temp_step_override = PRECISION_DEFAULT
         self._temp_entity = None
         self._temp_entity_error = False
 
@@ -134,6 +136,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._set_temp_divided = config.get(CONF_SET_TEMP_DIVIDED, False)
         self._precision_override = config.get(
             CONF_PRECISION_OVERRIDE, PRECISION_DEFAULT
+        )
+        self._temp_step_override = config.get(
+            CONF_TEMP_STEP_OVERRIDE, PRECISION_DEFAULT
         )
         min_temp = config.get(CONF_MIN_TEMP, 0)
         max_temp = config.get(CONF_MAX_TEMP, 0)
@@ -174,7 +179,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         if self._precision_override != PRECISION_DEFAULT:
             return self._precision_override
         if self._tuya.has_decimal():
-            return PRECISION_HALVES
+            return PRECISION_TENTHS
         return PRECISION_WHOLE
 
     @property
@@ -220,7 +225,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.precision
+        if self._temp_step_override != PRECISION_DEFAULT:
+            return self._temp_step_override
+        return self._tuya.target_temperature_step()
 
     @property
     def fan_mode(self):

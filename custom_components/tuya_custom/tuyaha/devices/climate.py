@@ -160,11 +160,11 @@ class TuyaClimate(TuyaDevice):
         digits1 = None if input_val.is_integer() else 1
         digits2 = None if scaled_val.is_integer() else 1
 
+        set_val = round(scaled_val, digits2)
         if use_divider:
             temp_val = round(input_val, digits1)
-            set_val = round(scaled_val, digits2)
         else:
-            temp_val = set_val = round(scaled_val, digits2)
+            temp_val = set_val
 
         if self._control_device("temperatureSet", {"value": temp_val}):
             self._update_data("temperature", set_val)

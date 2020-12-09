@@ -43,6 +43,7 @@ from .const import (
     CONF_SUPPORT_COLOR,
     CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
+    CONF_TEMP_STEP_OVERRIDE,
     CONF_TUYA_MAX_COLTEMP,
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
@@ -78,6 +79,13 @@ RESULT_SUCCESS = "success"
 RESULT_LOG_MESSAGE = {
     RESULT_AUTH_FAILED: "Invalid credential",
     RESULT_CONN_ERROR: "Connection error",
+}
+
+PRECISIONS_LIST = {
+    PRECISION_DEFAULT: "Default",
+    PRECISION_WHOLE: "Whole",
+    PRECISION_HALVES: "Halves",
+    PRECISION_TENTHS: "Tenths",
 }
 
 TUYA_TYPE_CONFIG = ["climate", "light"]
@@ -399,14 +407,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_PRECISION_OVERRIDE,
                     default=curr_conf.get(CONF_PRECISION_OVERRIDE, PRECISION_DEFAULT),
-                ): vol.In(
-                    {
-                        PRECISION_DEFAULT: "Default",
-                        PRECISION_WHOLE: "Whole",
-                        PRECISION_HALVES: "Halves",
-                        PRECISION_TENTHS: "Tenths",
-                    }
-                ),
+                ): vol.In(PRECISIONS_LIST),
+                vol.Optional(
+                    CONF_TEMP_STEP_OVERRIDE,
+                    default=curr_conf.get(CONF_TEMP_STEP_OVERRIDE, PRECISION_DEFAULT),
+                ): vol.In(PRECISIONS_LIST),
                 vol.Optional(
                     CONF_MIN_TEMP, default=curr_conf.get(CONF_MIN_TEMP, 0),
                 ): int,

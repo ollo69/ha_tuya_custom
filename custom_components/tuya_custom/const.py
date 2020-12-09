@@ -15,6 +15,7 @@ CONF_QUERY_INTERVAL = "query_interval"
 CONF_SET_TEMP_DIVIDED = "set_temp_divided"
 CONF_SUPPORT_COLOR = "support_color"
 CONF_TEMP_DIVIDER = "temp_divider"
+CONF_TEMP_STEP_OVERRIDE = "temp_step_override"
 CONF_TUYA_MAX_COLTEMP = "tuya_max_coltemp"
 
 DEFAULT_DISCOVERY_INTERVAL = 605
