@@ -3,6 +3,16 @@ from .base import TuyaDevice
 UNIT_CELSIUS = "CELSIUS"
 UNIT_FAHRENHEIT = "FAHRENHEIT"
 
+STEP_WHOLE = 1
+STEP_HALVES = 0.5
+STEP_TENTHS = 0.1
+
+TEMP_STEPS = {
+    STEP_WHOLE: "Whole",
+    STEP_HALVES: "Halves",
+    STEP_TENTHS: "Tenths",
+}
+
 
 class TuyaClimate(TuyaDevice):
 
@@ -110,8 +120,11 @@ class TuyaClimate(TuyaDevice):
 
     def target_temperature_step(self):
         if self.has_decimal():
-            return 0.5
-        return 1
+            return STEP_HALVES
+        return STEP_WHOLE
+
+    def supported_temperature_steps(self):
+        return TEMP_STEPS
 
     def current_fan_mode(self):
         """Return the fan setting."""
@@ -150,7 +163,7 @@ class TuyaClimate(TuyaDevice):
     def max_humidity(self):
         pass
 
-    def set_temperature(self, temperature, use_divider=False):
+    def set_temperature(self, temperature, use_divider=True):
         """Set new target temperature."""
 
         # the value used to set temperature is scaled based on the configured divider

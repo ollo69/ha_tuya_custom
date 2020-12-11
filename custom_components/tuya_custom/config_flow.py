@@ -17,9 +17,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     ENTITY_MATCH_NONE,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -37,7 +34,6 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_KELVIN,
     CONF_MIN_TEMP,
-    CONF_PRECISION_OVERRIDE,
     CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     CONF_SUPPORT_COLOR,
@@ -49,7 +45,6 @@ from .const import (
     DEFAULT_QUERY_INTERVAL,
     DEFAULT_TUYA_MAX_COLTEMP,
     DOMAIN,
-    PRECISION_DEFAULT,
     TUYA_DATA,
     TUYA_PLATFORMS,
     TUYA_TYPE_NOT_QUERY,
@@ -79,13 +74,6 @@ RESULT_SUCCESS = "success"
 RESULT_LOG_MESSAGE = {
     RESULT_AUTH_FAILED: "Invalid credential",
     RESULT_CONN_ERROR: "Connection error",
-}
-
-PRECISIONS_LIST = {
-    PRECISION_DEFAULT: "Default",
-    PRECISION_WHOLE: "Whole",
-    PRECISION_HALVES: "Halves",
-    PRECISION_TENTHS: "Tenths",
 }
 
 TUYA_TYPE_CONFIG = ["climate", "light"]
@@ -385,6 +373,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Create option schema for climate device."""
         unit = device.temperature_unit()
         def_unit = TEMP_FAHRENHEIT if unit == "FAHRENHEIT" else TEMP_CELSIUS
+        supported_steps = device.supported_temperature_steps()
+        default_step = device.target_temperature_step()
         entities_list.insert(0, ENTITY_MATCH_NONE)
 
         config_schema = vol.Schema(
@@ -402,16 +392,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
                 vol.Optional(
                     CONF_SET_TEMP_DIVIDED,
-                    default=curr_conf.get(CONF_SET_TEMP_DIVIDED, False),
+                    default=curr_conf.get(CONF_SET_TEMP_DIVIDED, True),
                 ): bool,
                 vol.Optional(
-                    CONF_PRECISION_OVERRIDE,
-                    default=curr_conf.get(CONF_PRECISION_OVERRIDE, PRECISION_DEFAULT),
-                ): vol.In(PRECISIONS_LIST),
-                vol.Optional(
                     CONF_TEMP_STEP_OVERRIDE,
-                    default=curr_conf.get(CONF_TEMP_STEP_OVERRIDE, PRECISION_DEFAULT),
-                ): vol.In(PRECISIONS_LIST),
+                    default=curr_conf.get(CONF_TEMP_STEP_OVERRIDE, default_step),
+                ): vol.In(supported_steps),
                 vol.Optional(
                     CONF_MIN_TEMP, default=curr_conf.get(CONF_MIN_TEMP, 0),
                 ): int,
