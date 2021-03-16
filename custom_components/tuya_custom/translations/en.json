@@ -15,6 +15,7 @@
                     "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
                     "password": "Password",
                     "platform": "The app where your account register",
+                    "region": "The region used for authentication",
                     "username": "Username"
                 },
                 "description": "Enter your Tuya credential.",

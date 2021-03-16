@@ -2,7 +2,9 @@
   "domain": "tuya_custom",
   "name": "Tuya Custom",
   "documentation": "https://www.home-assistant.io/integrations/tuya",
+  "issue_tracker": "https://github.com/ollo69/ha_tuya_custom/issues",
   "requirements": [],
   "codeowners": ["@ollo69"],
-  "config_flow": true
+  "config_flow": true,
+  "version": "0.1.6"
 }

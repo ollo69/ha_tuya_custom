@@ -37,4 +37,10 @@ TUYA_PLATFORMS = {
     "jinvoo_smart": "Jinvoo Smart",
 }
 
+TUYA_REGIONS = {
+    "cn": "CN",
+    "eu": "EU",
+    "us": "US",
+}
+
 TUYA_TYPE_NOT_QUERY = ["scene", "switch"]

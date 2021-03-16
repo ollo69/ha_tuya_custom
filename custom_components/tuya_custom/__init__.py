@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from .tuyaha.tuyaapi import (
+    DEFAULTREGION,
     TuyaApi,
     TuyaAPIException,
     TuyaAPIRateLimitException,
@@ -14,7 +15,13 @@ from .tuyaha.tuyaapi import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_REGION,
+    CONF_USERNAME,
+)
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -158,10 +165,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data[CONF_PASSWORD]
     country_code = entry.data[CONF_COUNTRYCODE]
     platform = entry.data[CONF_PLATFORM]
+    region = entry.data.get(CONF_REGION, DEFAULTREGION)
 
     try:
         await hass.async_add_executor_job(
-            tuya.init, username, password, country_code, platform
+            tuya.init, username, password, country_code, platform, region
         )
     except (
         TuyaNetException,

@@ -2,6 +2,7 @@
 import logging
 
 from .tuyaha.tuyaapi import (
+    DEFAULTREGION,
     TuyaApi,
     TuyaAPIException,
     TuyaAPIRateLimitException,
@@ -14,6 +15,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PLATFORM,
+    CONF_REGION,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     ENTITY_MATCH_NONE,
@@ -47,6 +49,7 @@ from .const import (
     DOMAIN,
     TUYA_DATA,
     TUYA_PLATFORMS,
+    TUYA_REGIONS,
     TUYA_TYPE_NOT_QUERY,
 )
 
@@ -60,6 +63,7 @@ DATA_SCHEMA_USER = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_COUNTRYCODE): vol.Coerce(int),
         vol.Required(CONF_PLATFORM): vol.In(TUYA_PLATFORMS),
+        vol.Required(CONF_REGION, default=DEFAULTREGION): vol.In(TUYA_REGIONS),
     }
 )
 
@@ -91,6 +95,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = None
         self._platform = None
         self._username = None
+        self._region = None
         self._is_import = False
 
     def _save_entry(self):
@@ -101,6 +106,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_PLATFORM: self._platform,
                 CONF_USERNAME: self._username,
+                CONF_REGION: self._region,
             },
         )
 
@@ -109,7 +115,11 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         tuya = TuyaApi()
         try:
             tuya.init(
-                self._username, self._password, self._country_code, self._platform
+                self._username,
+                self._password,
+                self._country_code,
+                self._platform,
+                self._region,
             )
         except (TuyaAPIRateLimitException, TuyaNetException, TuyaServerException):
             return RESULT_CONN_ERROR
@@ -136,6 +146,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._password = user_input[CONF_PASSWORD]
             self._platform = user_input[CONF_PLATFORM]
             self._username = user_input[CONF_USERNAME]
+            self._region = user_input.get(CONF_REGION, DEFAULTREGION)
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
