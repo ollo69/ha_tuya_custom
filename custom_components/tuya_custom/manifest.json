@@ -6,5 +6,5 @@
   "requirements": [],
   "codeowners": ["@ollo69"],
   "config_flow": true,
-  "version": "0.1.6"
+  "version": "0.1.7"
 }
