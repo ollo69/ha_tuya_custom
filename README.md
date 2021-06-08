@@ -2,9 +2,9 @@
 
 ## Important release information 
 
-**A new [custom integration](https://github.com/tuya/tuya-home-assistant/) based on new API is under development. This new indegration
-provide better response and support for new devices.</br> I strongly suggest to everybody
-to replace this integration or native HA Tuya integration with the new one.</br> 
+**A new [custom integration](https://github.com/tuya/tuya-home-assistant/) based on new API is under development. 
+This new integration provide better response and support for new devices.</br> 
+I strongly suggest everybody to replace this integration or native HA Tuya integration with the new one.</br> 
 In any case this integration will not be supported anymore.**
 
 *********
