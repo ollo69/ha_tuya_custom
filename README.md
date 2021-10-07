@@ -1,13 +1,7 @@
 # Integration ha_tuya_custom
 
-## Important release information 
+## This integration was created exclusively to test improvement for the  Home Assistant Tuya native integration based on old Tuya API.<br/>As HA 2021.10.0 switched to Tuya-supported tuya-iot-py-sdk library, there is no sense to continue supporting this integration which uses deprecated API.<br/>I strongly suggest everybody to remove this integration, upgrade HA to last release and configure new native HA Tuya integration.
 
-**A new [custom integration](https://github.com/tuya/tuya-home-assistant/) based on new API is under development. 
-This new integration provide better response and support for new devices.</br> 
-I strongly suggest everybody to replace this integration or native HA Tuya integration with the new one.</br> 
-In any case this integration will not be supported anymore.**
-
-*********
 
 **Important:** Due to dedicated Tuya API limitation, the refresh interval cannot be faster than 5 minutes
 (reduced to 1 minute if you have only 1 device). Do not open issue to ask faster refresh because it is not possible. 
